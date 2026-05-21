@@ -5580,7 +5580,7 @@ async function registerIO(){
   document.getElementById('io-qty').value='';
   document.getElementById('io-note').value='';
   document.getElementById('io-hogi').value='';
-  document.getElementById('io-date').value = new Date().toISOString().slice(0,10);
+  // document.getElementById('io-date').value = new Date().toISOString().slice(0,10);
   setTimeout(()=>msg.textContent='',3000);
 
   await saveToCloud();
