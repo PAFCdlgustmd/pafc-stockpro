@@ -5566,7 +5566,7 @@ async function registerIO(){
   
   const it = inv.find(i=>i.name===item);
   if(type==='out' && it.current < qty){ msg.className='msg-err'; msg.textContent=`재고 부족 (현재: ${it.current}개)`; return; }
-  const today = dateVal || new Date().toISOString().slice(0,10);
+  const today = (dateVal && dateVal.trim()) ? dateVal.trim() : new Date().toISOString().slice(0,10);
   
   const uniqueId = Date.now() + '-' + Math.floor(Math.random()*1000);
   logs.unshift({id:uniqueId, date:today, type, item, site, hogi:hogs, qty, note});
@@ -5607,7 +5607,7 @@ function previewBulkData() {
     const tokens = line.split('\t').map(t => t.trim());
     if(tokens.length < 2) return;
     
-    let date = tokens[0] || new Date().toISOString().slice(0,10);
+    let date = (tokens[0] && tokens[0].trim()) ? tokens[0].trim() : new Date().toISOString().slice(0,10);
     let site = tokens[1] || '';
     let hogi = tokens[2] === '-' ? '' : (tokens[2] || '');
     let item = tokens[3] || '';
