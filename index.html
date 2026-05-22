@@ -380,7 +380,7 @@ tr:hover td{background:#E6F1FB;}
 
 <script>
 // ★★★ [중요] 2단계에서 배포한 구글 웹 앱 URL 주소를 여기에 넣어주세요 ★★★
-const GOOGLE_WEB_APP_URL = "https://script.google.com/macros/library/d/1RTboSHFcevWGTVlr2hgUVFzFQx3hvsTMU1EVEl2pMg_SyPiYiouSymA0/2";
+const GOOGLE_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyJXmQ-rypEqU7UNNUI_Q9p_ovMxqxBXcEIsyUBJYr1PJb-0uqicAidVYz-uKZ4o3q1/exec";
 
 const BASE = [
   {name:"레진(후지전기)",        initial:0},
@@ -446,18 +446,17 @@ async function loadFromCloud() {
   }
 }
 
+// ☁️ 구글 클라우드 시트에 실시간 데이터 쓰기
 async function saveToCloud() {
   if(!GOOGLE_WEB_APP_URL || GOOGLE_WEB_APP_URL.includes("여기에_복사한")) return;
   setStatus("변경사항 클라우드 저장 중...");
   try {
     const payload = { logs: logs, sites: sites };
-    const res = await fetch(GOOGLE_WEB_APP_URL, {
+    await fetch(GOOGLE_WEB_APP_URL, {
       method: "POST",
       body: JSON.stringify(payload),
       headers: { "Content-Type": "text/plain" }
     });
-    // 저장 후 즉시 최신 데이터 다시 불러와서 모두 동기화
-    await loadFromCloud();
     setStatus("✓ 변경사항 클라우드 저장 완료", "success");
   } catch(e) {
     console.error(e);
@@ -880,11 +879,6 @@ document.getElementById('io-date').value = new Date().toISOString().slice(0,10);
 
 // 페이지가 로드되면 자동으로 클라우드 데이터를 불러옵니다.
 loadFromCloud();
-
-// ★ 30초마다 자동으로 최신 데이터 새로고침 (동료가 등록한 내용 반영)
-setInterval(() => {
-  loadFromCloud();
-}, 30000);
 </script>
 
 
