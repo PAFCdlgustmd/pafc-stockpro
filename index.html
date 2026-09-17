@@ -1,886 +1,134 @@
 <!DOCTYPE html>
-<!-- saved from url=(0045)https://pafcdlgustmd.github.io/pafc-stockpro/ -->
-<html lang="ko"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PAFC 재고 관리 (클라우드 실시간 연동)</title>
-<link rel="stylesheet" href="./PAFC 재고관리 시스템_files/tabler-icons.min.css">
-<script src="./PAFC 재고관리 시스템_files/chart.umd.min.js.다운로드"></script>
+<title>PAFC 통합 관리 시스템</title>
 <style>
-*{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:sans-serif;background:#f4f6fa;min-height:100vh;padding:1.5rem;}
-.app{max-width:780px;margin:0 auto;}
-.topbar{background:#185FA5;border-radius:12px;padding:1rem 1.25rem;margin-bottom:1.25rem;display:flex;align-items:center;justify-content:space-between;}
-.topbar-title{color:#E6F1FB;font-size:17px;font-weight:500;display:flex;align-items:center;gap:10px;}
-.topbar-date{color:#85B7EB;font-size:12px;}
-.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:1.25rem;}
-.sc{border-radius:8px;padding:12px 14px;}
-.sc-blue{background:#E6F1FB;}.sc-green{background:#EAF3DE;}.sc-amber{background:#FAEEDA;}.sc-red{background:#FCEBEB;}
-.sc-label{font-size:11px;font-weight:500;margin-bottom:4px;}
-.sc-blue .sc-label{color:#185FA5;}.sc-green .sc-label{color:#3B6D11;}.sc-amber .sc-label{color:#854F0B;}.sc-red .sc-label{color:#A32D2D;}
-.sc-val{font-size:22px;font-weight:500;}
-.sc-blue .sc-val{color:#0C447C;}.sc-green .sc-val{color:#27500A;}.sc-amber .sc-val{color:#633806;}.sc-red .sc-val{color:#791F1F;}
-.tabs{display:flex;gap:6px;margin-bottom:1.25rem;}
-.tab{flex:1;padding:9px 0;text-align:center;font-size:13px;cursor:pointer;border-radius:8px;border:0.5px solid #B5D4F4;background:#E6F1FB;color:#185FA5;font-weight:500;}
-.tab.active{background:#185FA5;color:#E6F1FB;border-color:#185FA5;}
-.card{background:#fff;border:0.5px solid #ddd;border-radius:12px;overflow:hidden;margin-bottom:1.25rem;position:relative;}
-.card-pad{padding:1rem 1.25rem;}
-table{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed;}
-th{padding:9px 10px;font-size:11px;font-weight:500;color:#185FA5;background:#E6F1FB;border-bottom:0.5px solid #B5D4F4;text-align:left;}
-td{padding:10px;border-bottom:0.5px solid #eee;color:#222;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-tr:last-child td{border-bottom:none;}
-tr:hover td{background:#E6F1FB;}
-.badge{display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:500;}
-.b-ok{background:#EAF3DE;color:#3B6D11;}
-.b-warn{background:#FAEEDA;color:#854F0B;}
-.b-danger{background:#FCEBEB;color:#A32D2D;}
-.b-in{background:#E1F5EE;color:#085041;}
-.b-out{background:#FAECE7;color:#712B13;}
-.sec-title{font-size:13px;font-weight:500;color:#185FA5;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
-.input-row{display:flex;gap:8px;margin-bottom:10px;}
-.input-row input,.input-row select{flex:1;font-size:13px;padding:8px 10px;border:0.5px solid #ccc;border-radius:8px;outline:none;}
-.input-row input:focus,.input-row select:focus{border-color:#185FA5;}
-.site-wrap{flex:1;position:relative;display:flex;gap:6px;}
-.site-wrap select{flex:1;font-size:13px;padding:8px 10px;border:0.5px solid #ccc;border-radius:8px;outline:none;}
-.site-wrap select:focus{border-color:#185FA5;}
-.btn-add-site{background:#E6F1FB;color:#185FA5;border:0.5px solid #B5D4F4;border-radius:8px;padding:8px 12px;font-size:13px;cursor:pointer;white-space:nowrap;font-weight:500;}
-.btn-add-site:hover{background:#B5D4F4;}
-.btn-reg{background:#185FA5;color:#E6F1FB;border:none;border-radius:8px;padding:9px 18px;font-size:13px;cursor:pointer;white-space:nowrap;font-weight:500;}
-.btn-reg:hover{background:#0C447C;}
-.btn-del-site{background:#FCEBEB;color:#A32D2D;border:0.5px solid #F7C1C1;border-radius:8px;padding:8px 10px;font-size:13px;cursor:pointer;white-space:nowrap;}
-.btn-del-site:hover{background:#F7C1C1;}
-.log-row{display:flex;gap:10px;padding:10px 0;border-bottom:0.5px solid #eee;font-size:13px;align-items:center;}
-.log-row:last-child{border-bottom:none;}
-.log-date{color:#888;font-size:11px;min-width:76px;}
-.log-site{min-width:72px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.log-item{flex:1;}
-.log-qty{min-width:36px;text-align:right;font-weight:500;color:#0C447C;}
-.log-note{font-size:11px;color:#888;min-width:50px;overflow:hidden;text-overflow:ellipsis;}
-.btn-log-del{background:#FCEBEB;color:#A32D2D;border:0.5px solid #F7C1C1;border-radius:4px;padding:3px 8px;font-size:11px;cursor:pointer;font-weight:500;white-space:nowrap;}
-.btn-log-del:hover{background:#F7C1C1;}
-.empty{text-align:center;padding:2rem;color:#888;font-size:13px;}
-.filter-row{display:flex;gap:8px;margin-bottom:10px;}
-.filter-row select{flex:1;font-size:13px;padding:8px 10px;border:0.5px solid #ccc;border-radius:8px;}
-.msg-ok{color:#3B6D11;font-size:13px;margin-top:4px;}
-.msg-err{color:#A32D2D;font-size:13px;margin-top:4px;}
-.hidden{display:none;}
-.new-site-row{display:flex;gap:6px;margin-bottom:10px;}
-.new-site-row input{flex:1;font-size:13px;padding:8px 10px;border:0.5px solid #ccc;border-radius:8px;outline:none;}
-.new-site-row input:focus{border-color:#185FA5;}
-.site-mgmt{background:#f8fafd;border:0.5px solid #B5D4F4;border-radius:8px;padding:10px 12px;margin-bottom:10px;}
-.site-mgmt-title{font-size:12px;color:#185FA5;font-weight:500;margin-bottom:8px;}
-.an-filter{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
-.an-filter select{flex:1;min-width:120px;font-size:13px;padding:8px 10px;border:0.5px solid #ccc;border-radius:8px;outline:none;}
-.an-filter select:focus{border-color:#185FA5;}
-.chart-wrap{background:#fff;border:0.5px solid #ddd;border-radius:12px;padding:1rem 1.25rem;margin-bottom:1.25rem;}
-.chart-title{font-size:13px;font-weight:500;color:#185FA5;margin-bottom:12px;}
-.chart-canvas{width:100%;height:240px;}
-.an-table-wrap{background:#fff;border:0.5px solid #ddd;border-radius:12px;overflow:auto;margin-bottom:1.25rem;}
-.an-table{width:100%;border-collapse:collapse;font-size:12px;}
-.an-table th{padding:8px 10px;background:#E6F1FB;color:#185FA5;font-weight:500;border-bottom:0.5px solid #B5D4F4;text-align:center;white-space:nowrap;}
-.an-table td{padding:8px 10px;border-bottom:0.5px solid #eee;text-align:center;color:#222;}
-.an-table tr:last-child td{border-bottom:none;font-weight:500;background:#f8fafd;}
-.an-table td:first-child{text-align:left;font-weight:500;}
+  * { box-sizing: border-box; margin:0; padding:0; }
+  html, body { height: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans KR", sans-serif;
+    background: #f0f4f8;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+  }
 
-.bulk-section { margin-top: 20px; border-top: 2px dashed #B5D4F4; padding-top: 20px; }
-.bulk-textarea { width: 100%; height: 100px; padding: 10px; font-size: 12px; border: 1px solid #ccc; border-radius: 8px; font-family: monospace; resize: vertical; outline: none; }
-.bulk-textarea:focus { border-color: #185FA5; }
-.bulk-preview { max-height: 150px; overflow-y: auto; margin: 10px 0; font-size: 11px; background: #fafafa; border: 1px solid #eee; border-radius: 6px; }
-.bulk-preview table { width: 100%; }
-.bulk-preview th { background: #f0f4f8; padding: 6px; font-size: 11px; color: #555; }
-.bulk-preview td { padding: 6px; border-bottom: 1px solid #f0f0f0; }
-.btn-bulk-reg { background: #27500A; color: #fff; border: none; border-radius: 8px; padding: 10px 20px; font-size: 13px; cursor: pointer; font-weight: bold; width: 100%; }
-.btn-bulk-reg:hover { background: #1b3807; }
-.log-tools { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
-.log-filter-row-1 { display: flex; gap: 8px; width: 100%; }
-.log-filter-row-2 { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-.btn-clear-all { background: #A32D2D; color: #fff; border: none; border-radius: 8px; padding: 8px 14px; font-size: 12px; cursor: pointer; font-weight: 500; display: flex; align-items: center; gap: 4px; white-space: nowrap; }
-.btn-clear-all:hover { background: #791F1F; }
+  header {
+    background: #185FA5;
+    color: #fff;
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,.12);
+    z-index: 10;
+  }
+  header h1 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
 
-.inv-tool-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-.inv-year-label { font-size: 13px; color: #185FA5; font-weight: 500; display: flex; align-items: center; gap: 4px; }
-.inv-year-select { font-size: 13px; padding: 6px 12px; border: 0.5px solid #ccc; border-radius: 8px; outline: none; background: #fff; color: #222; font-weight: 500; }
-.inv-year-select:focus { border-color: #185FA5; }
+  .tabs {
+    display: flex;
+    gap: 6px;
+    flex: 1;
+  }
+  .tab-btn {
+    flex: 0 0 auto;
+    padding: 9px 22px;
+    border: none;
+    border-radius: 8px;
+    background: rgba(255,255,255,.12);
+    color: #E6F1FB;
+    font-size: .9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .15s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .tab-btn:hover { background: rgba(255,255,255,.22); }
+  .tab-btn.active { background: #fff; color: #185FA5; }
+  .tab-btn .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: currentColor; opacity: .5;
+  }
+  .tab-btn.active .dot { opacity: 1; }
 
-/* ☁️ 상단 클라우드 상태 바 디자인 */
-.cloud-bar { background: #FFF9E6; border: 1px solid #FFEBAA; color: #856404; padding: 8px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
-.cloud-status { display: flex; align-items: center; gap: 6px; }
-.btn-sync { background: #185FA5; color: #fff; border: none; border-radius: 4px; padding: 4px 8px; font-size: 11px; cursor: pointer; }
-.btn-sync:hover { background: #0C447C; }
+  main {
+    flex: 1;
+    position: relative;
+    min-height: 0;
+  }
+
+  iframe {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: #fff;
+    display: none;
+  }
+  iframe.active { display: block; }
+
+  .loading {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #94a3b8;
+    font-size: .9rem;
+    pointer-events: none;
+  }
 </style>
 </head>
 <body>
-<div class="app">
-  <div class="topbar">
-    <div class="topbar-title">
-      <i class="ti ti-cloud-computing" style="font-size:20px;"></i>
-      PAFC 재고 관리 (클라우드 공유형)
-    </div>
-    <span class="topbar-date" id="today-date">2026. 5. 21.</span>
-  </div>
 
-  <div class="cloud-bar" id="cloud-bar" style="background: rgb(234, 243, 222); border-color: rgb(193, 224, 157);">
-    <div class="cloud-status" id="cloud-status" style="color: rgb(59, 109, 17);"><i class="ti ti-cloud-lock"></i> <span>✓ 실시간 클라우드 연결 완료 (안전)</span></div>
-    <button class="btn-sync" onclick="loadFromCloud()">수동 새로고침</button>
-  </div>
+  <header>
+    <h1>📊 PAFC 통합 관리</h1>
+    <nav class="tabs">
+      <button class="tab-btn active" data-tab="trip" onclick="switchTab('trip')">
+        <span class="dot"></span> 출장 관리 시스템
+      </button>
+      <button class="tab-btn" data-tab="stock" onclick="switchTab('stock')">
+        <span class="dot"></span> 재고 관리 시스템
+      </button>
+    </nav>
+  </header>
 
-  <div class="stats-grid" id="stats-grid">
-    <div class="sc sc-blue"><div class="sc-label"><i class="ti ti-box"></i> 전체 재고</div><div class="sc-val">-1518</div></div>
-    <div class="sc sc-green"><div class="sc-label"><i class="ti ti-circle-check"></i> 정상 품목</div><div class="sc-val">0</div></div>
-    <div class="sc sc-amber"><div class="sc-label"><i class="ti ti-alert-triangle"></i> 주의 품목</div><div class="sc-val">0</div></div>
-    <div class="sc sc-red"><div class="sc-label"><i class="ti ti-alert-circle"></i> 부족 품목</div><div class="sc-val">12</div></div>
-  </div>
+  <main>
+    <div class="loading" id="loading">불러오는 중...</div>
+    <iframe id="frame-trip" class="active" src="trip.html" title="출장 관리 시스템"></iframe>
+    <iframe id="frame-stock" src="stock.html" title="재고 관리 시스템"></iframe>
+  </main>
 
-  <div class="tabs">
-    <button class="tab" onclick="showTab(&#39;inventory&#39;)"><i class="ti ti-box"></i> 현재 재고</button>
-    <button class="tab active" onclick="showTab(&#39;inout&#39;)"><i class="ti ti-arrows-exchange"></i> 입출고</button>
-    <button class="tab" onclick="showTab(&#39;log&#39;)"><i class="ti ti-list"></i> 이력</button>
-    <button class="tab" onclick="showTab(&#39;analysis&#39;)"><i class="ti ti-chart-line"></i> 분석</button>
-  </div>
+  <script>
+    let loaded = { trip: false, stock: false };
 
-  <div id="tab-inventory" class="hidden">
-    <div class="inv-tool-bar">
-      <div class="inv-year-label"><i class="ti ti-calendar-event"></i> 보기 연도 설정:</div>
-      <select id="inv-year-select" class="inv-year-select" onchange="renderInv()"><option value="2027">2027년</option><option value="2026">2026년</option><option value="2025">2025년</option><option value="2024">2024년</option></select>
-    </div>
-    <div class="card">
-      <table>
-        <thead><tr>
-          <th style="width:30%">품목</th>
-          <th style="width:16%">현재 재고</th>
-          <th style="width:18%" id="th-year-in">2026 입고</th>
-          <th style="width:18%" id="th-year-out">2026 출고</th>
-          <th style="width:18%">상태</th>
-        </tr></thead>
-        <tbody id="inventory-tbody">
-    <tr>
-      <td style="font-weight:500">레진(후지전기)</td>
-      <td style="font-weight:500;color:#0C447C">-123</td>
-      <td style="color:#222; font-weight: 500;">240</td>
-      <td style="color:#666">363</td>
-      <td><span class="badge b-danger">부족</span></td>
-    </tr>
-  
-    <tr>
-      <td style="font-weight:500">레진(삼양사)</td>
-      <td style="font-weight:500;color:#0C447C">0</td>
-      <td style="color:#222; font-weight: 500;">0</td>
-      <td style="color:#666">0</td>
-      <td><span class="badge b-danger">부족</span></td>
-    </tr>
-  
-    <tr>
-      <td style="font-weight:500">물필터</td>
-      <td style="font-weight:500;color:#0C447C">-124</td>
-      <td style="color:#222; font-weight: 500;">0</td>
-      <td style="color:#666">124</td>
-      <td><span class="badge b-danger">부족</span></td>
-    </tr>
-  
-    <tr>
-      <td style="font-weight:500">레진헤드</td>
-      <td style="font-weight:500;color:#0C447C">-3</td>
-      <td style="color:#222; font-weight: 500;">0</td>
-      <td style="color:#666">3</td>
-      <td><span class="badge b-danger">부족</span></td>
-    </tr>
-  
-    <tr>
-      <td style="font-weight:500">집수봉</td>
-      <td style="font-weight:500;color:#0C447C">-2</td>
-      <td style="color:#222; font-weight: 500;">0</td>
-      <td style="color:#666">2</td>
-      <td><span class="badge b-danger">부족</span></td>
-    </tr>
-  
-    <tr>
-      <td style="font-weight:500">활성탄필터</td>
-      <td style="font-weight:500;color:#0C447C">-2</td>
-      <td style="color:#222; font-weight: 500;">0</td>
-      <td style="color:#666">2</td>
-      <td><span class="badge b-danger">부족</span></td>
-    </tr>
-  
-    <tr>
-      <td style="font-weight:500">마이크로필터</td>
-      <td style="font-weight:500;color:#0C447C">-69</td>
-      <td style="color:#222; font-weight: 500;">0</td>
-      <td style="color:#666">69</td>
-      <td><span class="badge b-danger">부족</span></td>
-    </tr>
-  
-    <tr>
-      <td style="font-weight:500">인버터필터</td>
-      <td style="font-weight:500;color:#0C447C">-68</td>
-      <td style="color:#222; font-weight: 500;">0</td>
-      <td style="color:#666">68</td>
-      <td><span class="badge b-danger">부족</span></td>
-    </tr>
-  
-    <tr>
-      <td style="font-weight:500">개질기필터</td>
-      <td style="font-weight:500;color:#0C447C">-67</td>
-      <td style="color:#222; font-weight: 500;">0</td>
-      <td style="color:#666">67</td>
-      <td><span class="badge b-danger">부족</span></td>
-    </tr>
-  
-    <tr>
-      <td style="font-weight:500">GS-23</td>
-      <td style="font-weight:500;color:#0C447C">-816</td>
-      <td style="color:#222; font-weight: 500;">0</td>
-      <td style="color:#666">816</td>
-      <td><span class="badge b-danger">부족</span></td>
-    </tr>
-  
-    <tr>
-      <td style="font-weight:500">GS-6</td>
-      <td style="font-weight:500;color:#0C447C">-238</td>
-      <td style="color:#222; font-weight: 500;">0</td>
-      <td style="color:#666">238</td>
-      <td><span class="badge b-danger">부족</span></td>
-    </tr>
-  
-    <tr>
-      <td style="font-weight:500">방열팬</td>
-      <td style="font-weight:500;color:#0C447C">-6</td>
-      <td style="color:#222; font-weight: 500;">0</td>
-      <td style="color:#666">6</td>
-      <td><span class="badge b-danger">부족</span></td>
-    </tr>
-  </tbody>
-      </table>
-    </div>
-  </div>
-
-  <div id="tab-inout" class="">
-    <div class="card card-pad">
-      <div class="sec-title"><i class="ti ti-plus"></i> 개별 입출고 등록</div>
-
-      <div class="input-row">
-        <select id="io-type">
-          <option value="out">출고</option>
-          <option value="in">입고</option>
-        </select>
-        <select id="io-item"><option value="">품목 선택</option><option value="레진(후지전기)">레진(후지전기)</option><option value="레진(삼양사)">레진(삼양사)</option><option value="물필터">물필터</option><option value="레진헤드">레진헤드</option><option value="집수봉">집수봉</option><option value="활성탄필터">활성탄필터</option><option value="마이크로필터">마이크로필터</option><option value="인버터필터">인버터필터</option><option value="개질기필터">개질기필터</option><option value="GS-23">GS-23</option><option value="GS-6">GS-6</option><option value="방열팬">방열팬</option></select>
-        <div style="display:flex;gap:6px;margin-top:6px;">
-  <input type="text" id="new-item-input" placeholder="새로운 품목명 입력" style="flex:1;font-size:13px;padding:8px 10px;border:0.5px solid #ccc;border-radius:8px;outline:none;">
-  <button type="button" onclick="addItem()" style="background:#1D9E75;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:13px;cursor:pointer;font-weight:500;white-space:nowrap;">품목 추가</button>
-</div>
-      </div>
-
-      <div class="input-row" style="align-items:center;">
-        <div class="site-wrap">
-          <select id="io-site-sel" style="flex:1;"><option value="">현장 선택</option><option value="미래개발원">미래개발원</option><option value="kt대관령수련관">kt대관령수련관</option><option value="유일산업">유일산업</option><option value="겐지스사우나">겐지스사우나</option><option value="한사랑사우나">한사랑사우나</option><option value="아쿠아시티">아쿠아시티</option><option value="두류수영장">두류수영장</option><option value="선비사우나">선비사우나</option><option value="중구수영장">중구수영장</option><option value="그린파크">그린파크</option><option value="천호사우나">천호사우나</option><option value="안양데이터센터">안양데이터센터</option><option value="마포공덕역오피스텔">마포공덕역오피스텔</option><option value="KT대관령수련관">KT대관령수련관</option><option value="공덕역 오피스텔">공덕역 오피스텔</option><option value="다모테크">다모테크</option><option value="후지전기">후지전기</option></select>
-        </div>
-        <input type="number" id="io-qty" placeholder="수량" min="1" style="flex:1;">
-      </div>
-
-      <div class="input-row">
-        <input type="text" id="io-hogi" placeholder="호기 (예: 3, 5, 없으면 비워두세요)" style="flex:1;">
-      </div>
-
-      <div class="site-mgmt" id="site-mgmt-box">
-        <div class="site-mgmt-title"><i class="ti ti-building"></i> 현장 관리</div>
-        <div class="new-site-row">
-          <input type="text" id="new-site-input" placeholder="새 현장명 입력 (예: 유일산업)">
-          <button class="btn-add-site" onclick="addSite()"><i class="ti ti-plus"></i> 추가</button>
-          <button class="btn-del-site" onclick="delSite()"><i class="ti ti-trash"></i> 삭제</button>
-        </div>
-      </div>
-
-      <div class="input-row">
-        <input type="text" id="io-date" placeholder="날짜 (예: 2026-05-20)" style="flex:1;">
-      </div>
-      <div class="input-row">
-        <input type="text" id="io-note" placeholder="비고 (선택)">
-        <button class="btn-reg" id="btn-reg-io" onclick="registerIO()"><i class="ti ti-check"></i> 등록</button>
-      </div>
-      <div id="io-msg"></div>
-
-      <div class="bulk-section">
-        <div class="sec-title" style="color: #27500A;"><i class="ti ti-file-spreadsheet"></i> 엑셀 대량 붙여넣기 등록</div>
-        <p style="font-size:11px; color:#666; margin-bottom:8px;">
-          엑셀에서 <b>[ 날짜 | 현장명 | 호기 | 품목명 | 수량 ]</b> 순서로 범위를 복사(Ctrl+C) 후 아래에 붙여넣기(Ctrl+V) 하세요.
-        </p>
-        <textarea id="bulk-paste-area" class="bulk-textarea" placeholder="여기에 엑셀 데이터를 붙여넣으세요..." oninput="previewBulkData()"></textarea>
-        
-        <div id="bulk-preview-wrap" class="bulk-preview hidden">
-          <table>
-            <thead>
-              <tr><th>구분</th><th>날짜</th><th>현장명</th><th>호기</th><th>품목명</th><th>수량</th></tr>
-            </thead>
-            <tbody id="bulk-preview-tbody"></tbody>
-          </table>
-        </div>
-        
-        <div style="margin-top:10px;">
-          <button class="btn-bulk-reg" id="btn-bulk-reg-io" onclick="registerBulk()"><i class="ti ti-table-import"></i> 대량 등록 실행 (<span id="bulk-count">0</span>건)</button>
-        </div>
-        <div id="bulk-msg"></div>
-      </div>
-    </div>
-  </div>
-
-  <div id="tab-log" class="hidden">
-    <div class="log-tools">
-      <div class="log-filter-row-1">
-        <select id="log-filter-site" onchange="renderLog()"><option value="">전체 현장</option><option value="미래개발원">미래개발원</option><option value="kt대관령수련관">kt대관령수련관</option><option value="유일산업">유일산업</option><option value="겐지스사우나">겐지스사우나</option><option value="한사랑사우나">한사랑사우나</option><option value="아쿠아시티">아쿠아시티</option><option value="두류수영장">두류수영장</option><option value="선비사우나">선비사우나</option><option value="중구수영장">중구수영장</option><option value="그린파크">그린파크</option><option value="천호사우나">천호사우나</option><option value="안양데이터센터">안양데이터센터</option><option value="마포공덕역오피스텔">마포공덕역오피스텔</option><option value="KT대관령수련관">KT대관령수련관</option><option value="공덕역 오피스텔">공덕역 오피스텔</option><option value="다모테크">다모테크</option><option value="후지전기">후지전기</option></select>
-        <select id="log-filter-item" onchange="renderLog()"><option value="">전체 품목</option><option value="레진(후지전기)">레진(후지전기)</option><option value="레진(삼양사)">레진(삼양사)</option><option value="물필터">물필터</option><option value="레진헤드">레진헤드</option><option value="집수봉">집수봉</option><option value="활성탄필터">활성탄필터</option><option value="마이크로필터">마이크로필터</option><option value="인버터필터">인버터필터</option><option value="개질기필터">개질기필터</option><option value="GS-23">GS-23</option><option value="GS-6">GS-6</option><option value="방열팬">방열팬</option></select>
-        <select id="log-filter-type" onchange="renderLog()">
-          <option value="">전체 입출고</option>
-          <option value="in">입고만</option>
-          <option value="out">출고만</option>
-        </select>
-      </div>
-      <div class="log-filter-row-2">
-        <select id="log-sort-order" onchange="renderLog()" style="font-size:13px; padding:8px 10px; border:0.5px solid #ccc; border-radius:8px; flex:1; max-width:200px;">
-          <option value="desc">날짜 최신순 (내림차순)</option>
-          <option value="asc">날짜 과거순 (오름차순)</option>
-        </select>
-        <button class="btn-clear-all" onclick="clearAllLogs()"><i class="ti ti-trash-x"></i> 이력 전체 삭제</button>
-      </div>
-    </div>
-    
-    <div class="card" style="padding:0 12px; max-height: 600px; overflow-y: auto;">
-      <div id="log-list">
-    <div class="log-row">
-      <span class="log-date">2026-05-21</span>
-      <span class="badge b-in">입고</span>
-      <span class="log-site">후지전기</span>
-      <span class="log-item">레진(후지전기)</span>
-      <span class="log-qty">240개</span>
-      <span class="log-note"></span>
-      <button class="btn-log-del" onclick="deleteLog(&#39;1779340584129-961&#39;)">삭제</button>
-    </div>
-  </div>
-    </div>
-  </div>
-
-  <div id="tab-analysis" class="hidden">
-    <div class="an-filter">
-      <select id="an-site" onchange="renderAnalysis()"><option value="">전체 현장</option></select>
-      <select id="an-hogi" onchange="renderAnalysis()"><option value="">전체 호기</option></select>
-      <select id="an-item" onchange="renderAnalysis()"><option value="">전체 품목</option></select>
-      <select id="an-view" onchange="renderAnalysis()">
-        <option value="site">현장별 출고량</option>
-        <option value="item">품목별 출고량</option>
-        <option value="trend">월별 추이</option>
-      </select>
-    </div>
-    <div class="chart-wrap">
-      <div class="chart-title" id="an-chart-title">출고량 분석</div>
-      <canvas id="an-chart" style="width:100%;height:240px;"></canvas>
-    </div>
-    <div class="an-table-wrap">
-      <table class="an-table" id="an-table"></table>
-    </div>
-  </div>
-</div>
-
-<script>
-// ★★★ [중요] 2단계에서 배포한 구글 웹 앱 URL 주소를 여기에 넣어주세요 ★★★
-const GOOGLE_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyJXmQ-rypEqU7UNNUI_Q9p_ovMxqxBXcEIsyUBJYr1PJb-0uqicAidVYz-uKZ4o3q1/exec";
-
-const BASE = [
-  {name:"레진(후지전기)",        initial:0},
-  {name:"레진(삼양사)",        initial:0},
-  {name:"물필터",      initial:0},
-  {name:"레진헤드",    initial:0},
-  {name:"집수봉",      initial:0},
-  {name:"활성탄필터",  initial:0},
-  {name:"마이크로필터",initial:0},
-  {name:"인버터필터",  initial:0},
-  {name:"개질기필터",  initial:0},
-  {name:"GS-23",      initial:0},
-  {name:"GS-6",       initial:0},
-  {name:"방열팬",      initial:0},
-];
-
-const DEFAULT_SITES = [
-  "아쿠아시티", "그린파크", "유일산업", "한사랑사우나", "선비사우나",
-  "겐지스사우나", "미래개발원", "KT 대관령수련관", "두류수영장", "천호사우나",
-  "중구수영장", "후지전기"
-];
-
-let inv = BASE.map(i=>({name:i.name, current:0})); 
-let logs = [];
-let sites = [...DEFAULT_SITES];
-
-function setStatus(text, type='process') {
-  const bar = document.getElementById('cloud-bar');
-  const status = document.getElementById('cloud-status');
-  if(type==='error') {
-    bar.style.background = '#FCEBEB'; bar.style.borderColor = '#F7C1C1'; status.style.color = '#A32D2D';
-    status.innerHTML = `<i class="ti ti-cloud-off"></i> <span>${text}</span>`;
-  } else if(type==='success') {
-    bar.style.background = '#EAF3DE'; bar.style.borderColor = '#C1E09D'; status.style.color = '#3B6D11';
-    status.innerHTML = `<i class="ti ti-cloud-lock"></i> <span>${text}</span>`;
-  } else {
-    bar.style.background = '#FFF9E6'; bar.style.borderColor = '#FFEBAA'; status.style.color = '#856404';
-    status.innerHTML = `<i class="ti ti-refresh-dot"></i> <span>${text}</span>`;
-  }
-}
-
-// ☁️ 구글 클라우드 시트에서 실시간 전체 데이터 받아오기
-async function loadFromCloud() {
-  if(!GOOGLE_WEB_APP_URL || GOOGLE_WEB_APP_URL.includes("여기에_복사한")){
-    setStatus("오류: 코드 내부에서 구글 앱스 스크립트 주소(URL) 설정이 필요합니다.", "error");
-    return;
-  }
-  setStatus("클라우드 최신 데이터 동기화 중...");
-  try {
-    const res = await fetch(`${GOOGLE_WEB_APP_URL}?action=read`);
-    const data = await res.json();
-    if(data.logs) logs = data.logs;
-    if(data.sites) sites = data.sites;
-    
-    updateYearSelectOptions();
-    renderInv();
-    populateSels();
-    renderLog();
-    setStatus("✓ 실시간 클라우드 연결 완료 (안전)", "success");
-  } catch(e) {
-    console.error(e);
-    setStatus("동기화 실패: 네트워크 상태 혹은 구글 배포 설정을 확인하세요.", "error");
-  }
-}
-
-// ☁️ 구글 클라우드 시트에 실시간 데이터 쓰기
-async function saveToCloud() {
-  if(!GOOGLE_WEB_APP_URL || GOOGLE_WEB_APP_URL.includes("여기에_복사한")) return;
-  setStatus("변경사항 클라우드 저장 중...");
-  try {
-    const payload = { logs: logs, sites: sites };
-    await fetch(GOOGLE_WEB_APP_URL, {
-      method: "POST",
-      body: JSON.stringify(payload),
-      headers: { "Content-Type": "text/plain" }
-    });
-    setStatus("✓ 변경사항 클라우드 저장 완료", "success");
-  } catch(e) {
-    console.error(e);
-    setStatus("저장 실패: 클라우드 연결이 일시적으로 끊겼습니다.", "error");
-  }
-}
-
-function status(q){
-  if(q<=5)  return '<span class="badge b-danger">부족</span>';
-  if(q<=20) return '<span class="badge b-warn">주의</span>';
-  return '<span class="badge b-ok">정상</span>';
-}
-
-function renderStats(){
-  const total = inv.reduce((a,i)=>a+i.current,0);
-  const ok    = inv.filter(i=>i.current>20).length;
-  const warn  = inv.filter(i=>i.current>5&&i.current<=20).length;
-  const low   = inv.filter(i=>i.current<=5).length;
-  document.getElementById('stats-grid').innerHTML=`
-    <div class="sc sc-blue"><div class="sc-label"><i class="ti ti-box"></i> 전체 재고</div><div class="sc-val">${total}</div></div>
-    <div class="sc sc-green"><div class="sc-label"><i class="ti ti-circle-check"></i> 정상 품목</div><div class="sc-val">${ok}</div></div>
-    <div class="sc sc-amber"><div class="sc-label"><i class="ti ti-alert-triangle"></i> 주의 품목</div><div class="sc-val">${warn}</div></div>
-    <div class="sc sc-red"><div class="sc-label"><i class="ti ti-alert-circle"></i> 부족 품목</div><div class="sc-val">${low}</div></div>
-  `;
-}
-
-function updateYearSelectOptions(){
-  const select = document.getElementById('inv-year-select');
-  const prevVal = select.value;
-  
-  const thisYear = new Date().getFullYear().toString();
-  let yearsSet = new Set([thisYear, "2024", "2025", "2026", "2027"]);
-  
-  logs.forEach(l => {
-    if(l.date && l.date.length >= 4) { yearsSet.add(l.date.slice(0, 4)); }
-  });
-  
-  const sortedYears = Array.from(yearsSet).sort((a,b) => b - a);
-  select.innerHTML = '';
-  sortedYears.forEach(yr => { select.innerHTML += `<option value="${yr}">${yr}년</option>`; });
-  
-  if(prevVal && sortedYears.includes(prevVal)) { select.value = prevVal; } 
-  else { select.value = thisYear; }
-}
-
-function renderInv(){
-  const selectedYear = document.getElementById('inv-year-select').value || new Date().getFullYear().toString();
-  
-  document.getElementById('th-year-in').textContent = `${selectedYear} 입고`;
-  document.getElementById('th-year-out').textContent = `${selectedYear} 출고`;
-  
-  const computedInv = inv.map(item => {
-    const totalIn = logs.filter(l => l.item === item.name && l.type === 'in').reduce((a,l)=>a+l.qty, 0);
-    const totalOut = logs.filter(l => l.item === item.name && l.type === 'out').reduce((a,l)=>a+l.qty, 0);
-    item.current = totalIn - totalOut;
-
-    const yearIn = logs.filter(l => l.item === item.name && l.type === 'in' && l.date.startsWith(selectedYear)).reduce((a,l)=>a+l.qty, 0);
-    const yearOut = logs.filter(l => l.item === item.name && l.type === 'out' && l.date.startsWith(selectedYear)).reduce((a,l)=>a+l.qty, 0);
-    
-    return { name: item.name, current: item.current, yearIn: yearIn, yearOut: yearOut };
-  });
-
-  document.getElementById('inventory-tbody').innerHTML = computedInv.map(i=>`
-    <tr>
-      <td style="font-weight:500">${i.name}</td>
-      <td style="font-weight:500;color:#0C447C">${i.current}</td>
-      <td style="color:#222; font-weight: 500;">${i.yearIn}</td>
-      <td style="color:#666">${i.yearOut}</td>
-      <td>${status(i.current)}</td>
-    </tr>
-  `).join('');
-  
-  renderStats();
-}
-
-function renderSiteSel(){
-  const sel = document.getElementById('io-site-sel');
-  const logSel = document.getElementById('log-filter-site');
-  const prevVal = sel.value;
-  sel.innerHTML = '<option value="">현장 선택</option>';
-  logSel.innerHTML = '<option value="">전체 현장</option>';
-  sites.forEach(s=>{
-    sel.innerHTML   += `<option value="${s}">${s}</option>`;
-    logSel.innerHTML += `<option value="${s}">${s}</option>`;
-  });
-  if(prevVal) sel.value = prevVal;
-}
-
-async function addItem(){
-  const input = document.getElementById('new-item-input');
-  const name  = input.value.trim();
-  if(!name){ alert('품목명을 입력하세요.'); return; }
-  if(inv.find(i=>i.name===name)){ alert('이미 존재하는 품목입니다.'); return; }
-  inv.push({name, current:0});
-  populateSels();
-  document.getElementById('io-item').value = name;
-  input.value = '';
-  await saveToCloud();
-  alert(`"${name}" 품목이 추가되었습니다.`);
-}
-
-async function addSite(){
-  const input = document.getElementById('new-site-input');
-  const name  = input.value.trim();
-  if(!name){ alert('현장명을 입력하세요.'); return; }
-  if(sites.includes(name)){ alert('이미 존재하는 현장입니다.'); return; }
-  sites.push(name);
-  
-  renderSiteSel();
-  document.getElementById('io-site-sel').value = name;
-  input.value = '';
-  await saveToCloud();
-}
-
-async function delSite(){
-  const sel  = document.getElementById('io-site-sel');
-  const name = sel.value;
-  if(!name){ alert('삭제할 현장을 먼저 선택하세요.'); return; }
-  if(!confirm(`"${name}" 현장을 목록에서 삭제할까요?\n(이미 등록된 이력은 유지됩니다)`)) return;
-  sites = sites.filter(s=>s!==name);
-  
-  renderSiteSel();
-  await saveToCloud();
-}
-
-function populateSels(){
-  const s  = document.getElementById('io-item');
-  const lf = document.getElementById('log-filter-item');
-  s.innerHTML = '<option value="">품목 선택</option>';
-  lf.innerHTML = '<option value="">전체 품목</option>';
-  inv.forEach(i=>{
-    s.innerHTML  += `<option value="${i.name}">${i.name}</option>`;
-    lf.innerHTML += `<option value="${i.name}">${i.name}</option>`;
-  });
-  renderSiteSel();
-}
-
-async function registerIO(){
-  const type = document.getElementById('io-type').value;
-  const item = document.getElementById('io-item').value;
-  const site = document.getElementById('io-site-sel').value;
-  const qty  = parseInt(document.getElementById('io-qty').value);
-  const note = document.getElementById('io-note').value.trim();
-  const hogs = document.getElementById('io-hogi').value.trim();
-  const dateVal = document.getElementById('io-date').value;
-  const msg  = document.getElementById('io-msg');
-  if(!item){ msg.className='msg-err'; msg.textContent='품목을 선택하세요.'; return; }
-  if(!site){ msg.className='msg-err'; msg.textContent='현장을 선택하세요.'; return; }
-  if(!qty||qty<1){ msg.className='msg-err'; msg.textContent='수량을 입력하세요.'; return; }
-  
-  const it = inv.find(i=>i.name===item);
-  if(type==='out' && it.current < qty){ msg.className='msg-err'; msg.textContent=`재고 부족 (현재: ${it.current}개)`; return; }
-  const today = dateVal || new Date().toISOString().slice(0,10);
-  
-  const uniqueId = Date.now() + '-' + Math.floor(Math.random()*1000);
-  logs.unshift({id:uniqueId, date:today, type, item, site, hogi:hogs, qty, note});
-  
-  updateYearSelectOptions();
-  renderInv();
-  renderLog();
-  
-  msg.className='msg-ok';
-  msg.textContent=`✓ ${item} ${type==='in'?'입고':'출고'} ${qty}개 등록 완료`;
-  document.getElementById('io-qty').value='';
-  document.getElementById('io-note').value='';
-  document.getElementById('io-hogi').value='';
-  document.getElementById('io-date').value = new Date().toISOString().slice(0,10);
-  setTimeout(()=>msg.textContent='',3000);
-
-  await saveToCloud();
-}
-
-let parsedRows = [];
-
-function previewBulkData() {
-  const text = document.getElementById('bulk-paste-area').value;
-  const tbody = document.getElementById('bulk-preview-tbody');
-  const previewWrap = document.getElementById('bulk-preview-wrap');
-  const countSpan = document.getElementById('bulk-count');
-  
-  tbody.innerHTML = '';
-  parsedRows = [];
-  
-  if(!text.trim()) { previewWrap.classList.add('hidden'); countSpan.textContent = '0'; return; }
-  
-  const lines = text.split('\n');
-  let html = '';
-  
-  lines.forEach(line => {
-    if(!line.trim()) return;
-    const tokens = line.split('\t').map(t => t.trim());
-    if(tokens.length < 2) return;
-    
-    let date = tokens[0] || new Date().toISOString().slice(0,10);
-    let site = tokens[1] || '';
-    let hogi = tokens[2] === '-' ? '' : (tokens[2] || '');
-    let item = tokens[3] || '';
-    let qtyStr = tokens[4] || '0';
-    
-    let type = 'out';
-    if(site.includes('입고') || !site || site === '-') { type = 'in'; }
-    if(item === '레진') { item = '레진(후지전기)'; }
-    
-    const qty = parseInt(qtyStr.replace(/[^0-9]/g, '')) || 0;
-    
-    if(site && item && qty > 0) {
-      parsedRows.push({ date, site, hogi, item, qty, type });
-      html += `<tr>
-        <td><span class="badge ${type==='in'?'b-in':'b-out'}">${type==='in'?'입고':'출고'}</span></td>
-        <td>${date}</td>
-        <td>${site}</td>
-        <td>${hogi || '-'}</td>
-        <td>${item}</td>
-        <td>${qty}개</td>
-      </tr>`;
+    function checkLoaded(name) {
+      loaded[name] = true;
+      const loading = document.getElementById('loading');
+      if (loaded.trip || loaded.stock) loading.style.display = 'none';
     }
-  });
-  
-  if(parsedRows.length > 0) {
-    tbody.innerHTML = html; previewWrap.classList.remove('hidden'); countSpan.textContent = parsedRows.length;
-  } else {
-    previewWrap.classList.add('hidden'); countSpan.textContent = '0';
-  }
-}
+    document.getElementById('frame-trip').addEventListener('load', () => checkLoaded('trip'));
+    document.getElementById('frame-stock').addEventListener('load', () => checkLoaded('stock'));
 
-async function registerBulk() {
-  const msg = document.getElementById('bulk-msg');
-  if(parsedRows.length === 0) { alert('등록할 유효한 데이터가 없습니다.'); return; }
-  if(!confirm(`총 ${parsedRows.length}건의 데이터를 일괄 등록하겠습니까?`)) return;
-  
-  let successCount = 0;
-  for(let i = parsedRows.length - 1; i >= 0; i--) {
-    const row = parsedRows[i];
-    if(row.site && row.site !== '-' && !row.site.includes('입고') && !sites.includes(row.site)) { sites.push(row.site); }
-    
-    const it = inv.find(item => item.name === row.item || item.name.startsWith(row.item));
-    const finalItemName = it ? it.name : row.item;
-    
-    const uniqueId = Date.now() + '-' + Math.floor(Math.random()*100000) + '-' + i;
-    logs.unshift({ id: uniqueId, date: row.date, type: row.type, item: finalItemName, site: row.site, hogi: row.hogi, qty: row.qty, note: '엑셀 일괄등록' });
-    successCount++;
-  }
-  
-  updateYearSelectOptions();
-  renderInv();
-  renderSiteSel();
-  renderLog();
-  
-  document.getElementById('bulk-paste-area').value = '';
-  document.getElementById('bulk-preview-wrap').classList.add('hidden');
-  document.getElementById('bulk-count').textContent = '0';
-  
-  msg.className = 'msg-ok'; msg.textContent = `✓ 총 ${successCount}건이 클라우드에 성공적으로 반영되었습니다.`;
-  parsedRows = [];
+    function switchTab(name) {
+      document.querySelectorAll('.tab-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.tab === name);
+      });
+      document.getElementById('frame-trip').classList.toggle('active', name === 'trip');
+      document.getElementById('frame-stock').classList.toggle('active', name === 'stock');
+    }
+  </script>
 
-  await saveToCloud();
-}
-
-function renderLog(){
-  const fs = document.getElementById('log-filter-site').value;
-  const fi = document.getElementById('log-filter-item').value;
-  const ft = document.getElementById('log-filter-type').value;
-  const sortOrder = document.getElementById('log-sort-order').value;
-  
-  let filtered = logs.filter(l=> (!fs||l.site===fs) && (!fi||l.item===fi) && (!ft||l.type===ft) );
-  
-  filtered.sort((a, b) => {
-  const dateA = new Date(a.date).getTime() || 0;
-  const dateB = new Date(b.date).getTime() || 0;
-  
-  if (dateA !== dateB) {
-    return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
-  }
-  // 날짜가 완전히 같을 경우, 데이터가 등록된 순서(ID 값)로 정밀 정렬
-  return sortOrder === 'desc' ? b.id.localeCompare(a.id) : a.id.localeCompare(b.id);
-});
-
-  const el = document.getElementById('log-list');
-  if(!filtered.length){ el.innerHTML='<p class="empty">이력이 없습니다.</p>'; return; }
-  
-  el.innerHTML=filtered.map(l=>`
-    <div class="log-row">
-      <span class="log-date">${l.date || '-'}</span>
-      <span class="badge ${l.type==='in'?'b-in':'b-out'}">${l.type==='in'?'입고':'출고'}</span>
-      <span class="log-site">${l.site||'-'}${l.hogi?' '+l.hogi+'호기':''}</span>
-      <span class="log-item">${l.item}</span>
-      <span class="log-qty">${l.qty}개</span>
-      <span class="log-note">${l.note||''}</span>
-      <button class="btn-log-del" onclick="deleteLog('${l.id}')">삭제</button>
-    </div>
-  `).join('');
-}
-
-async function deleteLog(logId) {
-  const targetIndex = logs.findIndex(l => l.id === logId);
-  if (targetIndex === -1) return;
-  if(!confirm(`선택한 한 건의 이력을 삭제하겠습니까?`)) return;
-
-  logs.splice(targetIndex, 1);
-  updateYearSelectOptions();
-  renderInv();
-  renderLog();
-
-  await saveToCloud();
-}
-
-async function clearAllLogs() {
-  if (logs.length === 0) { alert("삭제할 이력이 없습니다."); return; }
-  if(!confirm("모든 이력을 완전히 삭제하고 전체 초기화하겠습니까?")) return;
-  logs = [];
-  inv = inv.map(i => ({ name: i.name, current: 0 }));
-  updateYearSelectOptions();
-  renderInv();
-  renderLog();
-
-  await saveToCloud();
-}
-
-let anChart = null;
-function populateAnalysisSels(){
-  const anSite = document.getElementById('an-site');
-  const anHogi = document.getElementById('an-hogi');
-  const anItem = document.getElementById('an-item');
-  anSite.innerHTML = '<option value="">전체 현장</option>';
-  sites.forEach(s=> anSite.innerHTML += `<option value="${s}">${s}</option>`);
-  const hogis = [...new Set(logs.filter(l=>l.hogi).map(l=>l.hogi))].sort((a,b)=>Number(a)-Number(b));
-  anHogi.innerHTML = '<option value="">전체 호기</option>';
-  hogis.forEach(h=> anHogi.innerHTML += `<option value="${h}">${h}호기</option>`);
-  anItem.innerHTML = '<option value="">전체 품목</option>';
-  inv.forEach(i=> anItem.innerHTML += `<option value="${i.name}">${i.name}</option>`);
-}
-
-const CHART_COLORS = ['#185FA5','#1D9E75','#D85A30','#BA7517','#993556','#534AB7','#639922','#A32D2D','#0F6E56','#854F0B'];
-
-function renderAnalysis(){
-  const scrX = window.scrollX; const scrY = window.scrollY;
-  const site = document.getElementById('an-site').value;
-  const hubo = document.getElementById('an-hogi').value;
-  const item = document.getElementById('an-item').value;
-  const view = document.getElementById('an-view').value;
-
-  const outLogs = logs.filter(l => l.type === 'out' && (!site || l.site === site) && (!hubo || l.hogi === hubo) && (!item || l.item === item) );
-  if(anChart){ anChart.destroy(); anChart=null; }
-
-  if(view === 'site'){
-    document.getElementById('an-chart-title').textContent = `현장별 출고량`;
-    const map = {}; outLogs.forEach(l=>{ map[l.site]=(map[l.site]||0)+l.qty; });
-    const labels = Object.keys(map).sort((a,b)=>map[b]-map[a]);
-    drawBarChart(labels, labels.map(k=>map[k]), '출고량');
-    drawSiteTable(map, labels);
-  } else if(view === 'item'){
-    document.getElementById('an-chart-title').textContent = `품목별 출고량`;
-    const map = {}; outLogs.forEach(l=>{ map[l.item]=(map[l.item]||0)+l.qty; });
-    const labels = Object.keys(map).sort((a,b)=>map[b]-map[a]);
-    drawBarChart(labels, labels.map(k=>map[k]), '출고량');
-    drawItemTable(map, labels);
-  } else {
-    document.getElementById('an-chart-title').textContent = `월별 출고 추이`;
-    drawTrendChart(outLogs, item, site);
-  }
-  setTimeout(function() { window.scrollTo(scrX, scrY); }, 0);
-}
-
-function drawBarChart(labels, data, labelName){
-  const ctx = document.getElementById('an-chart').getContext('2d');
-  anChart = new Chart(ctx, {
-    type:'bar', data:{ labels, datasets:[{ label:labelName, data, backgroundColor:'#185FA5', borderRadius:4 }] },
-    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false} }, scales:{ y:{ beginAtZero:true, ticks:{stepSize:1} } } }
-  });
-}
-
-function drawTrendChart(outLogs, item, site){
-  const ctx = document.getElementById('an-chart').getContext('2d');
-  const months = [...new Set(outLogs.map(l=>l.date.slice(0,7)))].sort();
-  if(!months.length){ document.getElementById('an-table').innerHTML='<tr><td>출고 이력이 없습니다.</td></tr>'; return; }
-
-  let groups = item ? ['전체'] : [...new Set(outLogs.map(l=>l.item))];
-  if(!item && groups.length > 5) groups = groups.slice(0,5);
-
-  const datasets = groups.map((g,i)=>{
-    const filtered = item ? outLogs : outLogs.filter(l=>l.item===g);
-    return { label: item ? (site||'전체') : g, data: months.map(m=> filtered.filter(l=>l.date.slice(0,7)===m).reduce((a,l)=>a+l.qty,0)), borderColor: CHART_COLORS[i%CHART_COLORS.length], backgroundColor:'transparent', tension:0.3, pointRadius:4 };
-  });
-
-  anChart = new Chart(ctx, {
-    type:'line', data:{ labels: months, datasets },
-    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'bottom', labels:{boxWidth:12,font:{size:11}} } }, scales:{ y:{ beginAtZero:true, ticks:{stepSize:1} } } }
-  });
-
-  const tHead = `<tr><th>품목</th>${months.map(m=>`<th>${m}</th>`).join('')}<th>합계</th></tr>`;
-  const tBody = groups.map(g=>{
-    const filtered = item ? outLogs : outLogs.filter(l=>l.item===g);
-    const cells = months.map(m=> filtered.filter(l=>l.date.slice(0,7)===m).reduce((a,l)=>a+l.qty,0));
-    return `<tr><td>${item?'전체':g}</td>${cells.map(v=>`<td>${v||''}</td>`).join('')}<td>${cells.reduce((a,v)=>a+v,0)}</td></tr>`;
-  });
-  document.getElementById('an-table').innerHTML = `<thead>${tHead}</thead><tbody>${tBody.join('')}</tbody>`;
-}
-
-function drawSiteTable(map, labels){
-  const total = labels.reduce((a,k)=>a+map[k],0);
-  const rows = labels.map(k=>`<tr><td>${k}</td><td>${map[k]}</td><td>${total?Math.round(map[k]/total*100):0}%</td></tr>`);
-  document.getElementById('an-table').innerHTML=`<thead><tr><th>현장</th><th>출고량</th><th>비율</th></tr></thead><tbody>${rows.join('')}</tbody>`;
-}
-
-function drawItemTable(map, labels){
-  const total = labels.reduce((a,k)=>a+map[k],0);
-  const rows = labels.map(k=>`<tr><td>${k}</td><td>${map[k]}</td><td>${total?Math.round(map[k]/total*100):0}%</td></tr>`);
-  document.getElementById('an-table').innerHTML=`<thead><tr><th>품목</th><th>출고량</th><th>비율</th></tr></thead><tbody>${rows.join('')}</tbody>`;
-}
-
-function showTab(tab){
-  ['inventory','inout','log','analysis'].forEach(t=>{ document.getElementById('tab-'+t).classList.toggle('hidden', t!==tab); });
-  document.querySelectorAll('.tab').forEach((el,i)=>{ el.classList.toggle('active',['inventory','inout','log','analysis'][i]===tab); });
-  if(tab==='inventory') { renderInv(); }
-  if(tab==='analysis'){ populateAnalysisSels(); renderAnalysis(); }
-}
-
-document.getElementById('today-date').textContent = new Date().toLocaleDateString('ko-KR');
-document.getElementById('io-date').value = new Date().toISOString().slice(0,10);
-
-// 페이지가 로드되면 자동으로 클라우드 데이터를 불러옵니다.
-loadFromCloud();
-</script>
-
-
-
-</body></html>
+</body>
+</html>
