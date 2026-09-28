@@ -196,6 +196,41 @@
     .chart-bar{height:100%;background:linear-gradient(90deg, var(--primary-light), var(--primary));border-radius:8px;transition:width 0.4s ease-out;}
     .chart-val{font-size:.84rem;font-weight:700;color:var(--primary);text-align:right;}
 
+    /* ── 주간/기간 일정 보기 ── */
+    #calWeekBar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:-6px 0 16px;padding:10px 12px;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;}
+    .cal-wk-label{font-size:.78rem;font-weight:700;color:var(--text-muted);margin-right:2px;white-space:nowrap;}
+    .cal-wk-chip{display:inline-flex;flex-direction:column;align-items:center;gap:1px;padding:6px 12px;border-radius:10px;border:1.5px solid var(--border);background:#fff;cursor:pointer;font-family:inherit;color:var(--text);line-height:1.25;transition:all .15s;}
+    .cal-wk-chip b{font-size:.82rem;}
+    .cal-wk-chip span{font-size:.66rem;color:var(--text-muted);font-weight:500;}
+    .cal-wk-chip:hover{border-color:var(--purple);background:var(--purple-light);}
+    .cal-wk-chip.active{background:var(--purple);border-color:var(--purple);color:#fff;}
+    .cal-wk-chip.active span{color:#ede9fe;}
+    .cal-wk-chip.today{flex-direction:row;font-size:.8rem;font-weight:700;color:var(--primary);border-color:var(--primary);}
+    .cal-wk-hint{flex-basis:100%;font-size:.7rem;color:var(--text-muted);}
+    .cal-wk-btn{padding:7px 12px;border-radius:8px;border:1.5px solid var(--border);background:#fff;font-family:inherit;font-size:.8rem;font-weight:700;cursor:pointer;color:var(--text);}
+    .cal-wk-btn.primary{background:var(--primary);border-color:var(--primary);color:#fff;}
+    .cal-wk-btn.share{background:#fee500;border-color:#fee500;color:#191600;}
+    .cal-wk-day{border:1.5px solid var(--border);border-radius:10px;padding:9px 11px;margin-bottom:10px;background:#fff;}
+    .cal-wk-day.today{border-color:var(--primary);background:#f8fbff;}
+    .cal-wk-dayhead{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-weight:700;font-size:.9rem;margin-bottom:6px;}
+    .cal-wk-dayhead .wd{font-size:.78rem;padding:1px 7px;border-radius:9px;background:#f1f5f9;}
+    .cal-wk-dayhead .wd.sun{color:#ef4444;background:#fee2e2;}
+    .cal-wk-dayhead .wd.sat{color:#3b82f6;background:#dbeafe;}
+    .cal-wk-badge{font-size:.66rem;font-weight:700;padding:1px 7px;border-radius:9px;}
+    .cal-wk-trip{border-left:4px solid #94a3b8;background:#f8fafc;border-radius:6px;padding:7px 9px;margin-bottom:6px;}
+    .cal-wk-site{font-size:.82rem;font-weight:700;margin-top:5px;word-break:break-all;}
+    .cal-wk-unit{font-size:.68rem;font-weight:700;color:var(--purple);background:var(--purple-light);padding:1px 7px;border-radius:9px;margin-left:4px;white-space:nowrap;}
+    .cal-wk-purp{font-size:.74rem;font-weight:500;color:var(--text-muted);margin-top:2px;}
+    .cal-wk-leave{font-size:.78rem;font-weight:700;padding:5px 9px;border-radius:6px;margin-bottom:6px;}
+    .cal-wk-empty{font-size:.78rem;color:var(--text-muted);padding:2px 0;}
+    #calGrid.dragging{user-select:none;-webkit-user-select:none;}
+    @media(min-width:901px){#calDetailBody{max-height:calc(100vh - 120px);overflow-y:auto;}}
+    @media(max-width:600px){
+      #calWeekBar{padding:8px;gap:6px;}
+      .cal-wk-chip{padding:6px 9px;}
+      .cal-wk-hint{display:none;}
+    }
+
     /* ── 달력 + 상세 레이아웃 ── */
     .cal-layout{display:flex;gap:20px;align-items:flex-start;}
     .cal-main{flex:1 1 60%;min-width:0;}
@@ -740,7 +775,7 @@
 <div class="container">
   <div style="margin-bottom:20px;">
     <h2 style="font-size:1.15rem;font-weight:700;margin-bottom:4px;">📆 출장 달력</h2>
-    <p style="font-size:.83rem;color:var(--text-muted);">월별 출장 일정을 달력으로 확인합니다.</p>
+    <p style="font-size:.83rem;color:var(--text-muted);">월별 출장 일정을 달력으로 확인합니다. 주차 버튼을 누르거나 날짜를 드래그하면 일별 상세 일정을 복사해서 보낼 수 있어요.</p>
   </div>
 
   <!-- 달력 컨트롤 -->
@@ -774,6 +809,9 @@
     <div style="margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap;" id="calLegend"></div>
     <button class="btn" style="padding:7px 16px;font-size:.85rem;border:1.5px solid #f97316;background:#fff7ed;color:#f97316;font-family:inherit;border-radius:8px;cursor:pointer;font-weight:600;" onclick="openLeaveModal(null)">🏖️ 휴가·연차 추가</button>
   </div>
+
+  <!-- 주간 선택 바 -->
+  <div id="calWeekBar"></div>
 
   <div class="cal-layout">
     <!-- 달력 본체 -->
@@ -1601,6 +1639,7 @@
   var calYear = new Date().getFullYear();
   var calMonth = new Date().getMonth();
   var calSelectedDate = null;
+  var calRange = null; // {start,end} 주간/기간 선택 상태
 
   const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwBG3L1wCMGIQ8dnsXCnOtYwh4vmReZ_K7Ljljr59KLxehOQJ90XTqiqrwR2Xcbmq23/exec';
 
@@ -4214,6 +4253,7 @@
   // ── 달력 ──
 
   function initCalendar() {
+    try { calInitDrag(); } catch(e){}
     // 범례
     var legend = document.getElementById('calLegend');
     var personLegend = PERSONS.map(function(name, i) {
@@ -4243,7 +4283,7 @@
     calMonth += delta;
     if (calMonth > 11) { calMonth = 0; calYear++; }
     if (calMonth < 0)  { calMonth = 11; calYear--; }
-    calSelectedDate = null;
+    calSelectedDate = null; calRange = null;
     calResetDetailPanel();
     renderCalendar();
   }
@@ -4251,14 +4291,14 @@
   function calGoToday() {
     calYear = new Date().getFullYear();
     calMonth = new Date().getMonth();
-    calSelectedDate = null;
+    calSelectedDate = null; calRange = null;
     calResetDetailPanel();
     renderCalendar();
   }
 
   function calGoYear(year) {
     calYear = parseInt(year);
-    calSelectedDate = null;
+    calSelectedDate = null; calRange = null;
     calResetDetailPanel();
     renderCalendar();
   }
@@ -4323,7 +4363,7 @@
 
   function calPickerSetYear(y) {
     calYear = y;
-    calSelectedDate = null;
+    calSelectedDate = null; calRange = null;
     calResetDetailPanel();
     renderCalPicker(); // 연도만 바꾸고 팝오버 유지 (월도 이어서 선택)
     renderCalendar();
@@ -4331,7 +4371,7 @@
 
   function calPickerSetMonth(m) {
     calMonth = m;
-    calSelectedDate = null;
+    calSelectedDate = null; calRange = null;
     calResetDetailPanel();
     closeCalPicker();
     renderCalendar();
@@ -4447,6 +4487,7 @@
           var brd   = isSelected ? '2px solid var(--primary)' : isToday ? '2px solid var(--primary)' : hasTrip ? '1.5px solid #c4b5fd' : '1.5px solid var(--border)';
           var numColor = col===0 ? '#ef4444' : col===6 ? '#3b82f6' : isToday ? 'var(--primary)' : 'var(--text)';
           var opacity = cell.thisMonth ? '1' : '0.4';
+          if (calRange && dStr >= calRange.start && dStr <= calRange.end) { bg = '#f5f3ff'; brd = '2px solid #7c3aed'; }
 
           var isMobile = window.innerWidth <= 600;
           var cellMinH = isMobile ? '84px' : '105px';
@@ -4509,7 +4550,7 @@
 
           html += '<td style="vertical-align:top;width:14.28%;min-height:'+cellMinH+';padding:0;">'
             + '<div style="min-height:'+cellMinH+';background:'+bg+';border:'+brd+';border-radius:8px;padding:'+(isMobile?'4px 3px':'7px 8px')+';cursor:pointer;opacity:'+opacity+';position:relative;box-sizing:border-box;"'
-            + ' onclick="calSelectDate(\''+dStr+'\')" ondblclick="openCalModal(\''+dStr+'\')">'
+            + ' data-date="'+dStr+'" onclick="calSelectDate(\''+dStr+'\')" ondblclick="openCalModal(\''+dStr+'\')">'
             + (function(){
               var hol = HOLIDAYS[dStr];
               var holBadge = '';
@@ -4535,9 +4576,271 @@
         el.addEventListener('mouseenter', function(){ var h=this.querySelector('.cal-dbl-hint'); if(h) h.style.display='block'; });
         el.addEventListener('mouseleave', function(){ var h=this.querySelector('.cal-dbl-hint'); if(h) h.style.display='none'; });
       });
+      renderCalWeekBar(cells);
+      if (calRange) renderWeekPanel();
     } catch(e) {
       document.getElementById('calGrid').innerHTML = '<div style="padding:20px;color:red;">달력 오류: '+e.message+'</div>';
     }
+  }
+
+
+  // ══════════════════════════════════════════════
+  // 주간/기간 일정 보기 (주차 버튼 · 드래그 선택 · 텍스트 복사/공유)
+  // ══════════════════════════════════════════════
+  var CAL_WD = ['일','월','화','수','목','금','토'];
+  function calEsc(v){ return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function calDiffDays(a,b){ return Math.round((b-a)/86400000); }
+  function calMD(d){ return (d.getMonth()+1)+'/'+d.getDate(); }
+  function calLeaveName(lv){ return lv.type==='summer' ? '여름휴가' : lv.type==='annual' ? '연차' : (lv.customName||'커스텀'); }
+  function calLeaveIcon(lv){ return lv.type==='summer' ? '🌴' : lv.type==='annual' ? '📅' : '✏️'; }
+
+  function calRangeDays(r){
+    var out=[], cur=parseLocalDate(r.start), end=parseLocalDate(r.end), guard=0;
+    while(cur<=end && guard++<62){ out.push(formatLocalDate(cur)); cur.setDate(cur.getDate()+1); }
+    return out;
+  }
+
+  function calRangeTitle(r){
+    var s=parseLocalDate(r.start), e=parseLocalDate(r.end);
+    var rng = calMD(s)+'~'+calMD(e);
+    if (calDiffDays(s,e)===6 && s.getDay()===0){
+      var Y=calYear, M=calMonth;
+      var inView=(s.getFullYear()===Y&&s.getMonth()===M)||(e.getFullYear()===Y&&e.getMonth()===M);
+      if(!inView){ var th=new Date(s.getFullYear(),s.getMonth(),s.getDate()+4); Y=th.getFullYear(); M=th.getMonth(); }
+      var first=new Date(Y,M,1), gridStart=new Date(Y,M,1-first.getDay());
+      var n=Math.floor(calDiffDays(gridStart,s)/7)+1;
+      if(n>=1&&n<=6) return Y+'년 '+(M+1)+'월 '+n+'주차 ('+rng+')';
+    }
+    return rng;
+  }
+
+  // 하루치 데이터(출장/휴가/휴일)를 한 번에 정리
+  function calDayItems(dStr){
+    var res={trips:[], leaves:[], holiday:HOLIDAYS[dStr]||null};
+    trips.forEach(function(t){
+      if(!t.start||!t.end||t.start>dStr||t.end<dStr) return;
+      var sites=[], idx={};
+      ensureStops(t).forEach(function(st){
+        var d=st.destination||'출장', k='k_'+d;
+        if(idx[k]===undefined){ idx[k]=sites.length; sites.push({dest:d,units:[],purposes:[]}); }
+        var site=sites[idx[k]];
+        if(st.unit && st.unit!=='없음') st.unit.split(',').forEach(function(u){ u=u.trim(); if(u&&site.units.indexOf(u)<0) site.units.push(u); });
+        if(st.purpose && st.purpose!=='미입력') st.purpose.split(',').forEach(function(pp){ pp=pp.trim(); if(pp&&site.purposes.indexOf(pp)<0) site.purposes.push(pp); });
+      });
+      res.trips.push({persons:t.persons||[], sites:sites});
+    });
+    leaves.forEach(function(lv){
+      if(!lv.start||!lv.end||lv.start>dStr||lv.end<dStr) return;
+      var name=calLeaveName(lv);
+      var note=(lv.note&&lv.note.trim()&&lv.note.trim()!==name)?lv.note.trim():'';
+      res.leaves.push({lv:lv, name:name, who:(lv.persons&&lv.persons.length)?lv.persons.join(', '):'전체', note:note});
+    });
+    return res;
+  }
+  function calIsSkippableDay(dStr, items){
+    var wd=parseLocalDate(dStr).getDay();
+    return (wd===0||wd===6) && !items.trips.length && !items.leaves.length && !items.holiday;
+  }
+
+  // 공유용 텍스트
+  function calBuildRangeText(r){
+    var lines=['📆 '+calRangeTitle(r)+' 출장 일정',''];
+    calRangeDays(r).forEach(function(dStr){
+      var items=calDayItems(dStr);
+      if(calIsSkippableDay(dStr,items)) return;
+      var d=parseLocalDate(dStr);
+      lines.push('■ '+calMD(d)+'('+CAL_WD[d.getDay()]+')'+(items.holiday?' · '+items.holiday.name:''));
+      items.trips.forEach(function(t){
+        lines.push('▶ '+(t.persons.join(', ')||'-'));
+        t.sites.forEach(function(si){
+          lines.push('   - '+si.dest+(si.units.length?' ('+si.units.join(', ')+')':'')+(si.purposes.length?' : '+si.purposes.join(', '):''));
+        });
+      });
+      items.leaves.forEach(function(l){ lines.push(calLeaveIcon(l.lv)+' '+l.who+' '+l.name+(l.note?' ('+l.note+')':'')); });
+      if(!items.trips.length&&!items.leaves.length) lines.push(items.holiday?'   휴일':'   일정 없음');
+      lines.push('');
+    });
+    while(lines.length&&lines[lines.length-1]==='') lines.pop();
+    return lines.join('\n');
+  }
+
+  function calToast(msg){
+    var el=document.getElementById('calToast');
+    if(!el){
+      el=document.createElement('div'); el.id='calToast';
+      el.style.cssText='position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:#1e293b;color:#fff;padding:10px 18px;border-radius:24px;font-size:.85rem;font-weight:600;z-index:99999;box-shadow:0 4px 16px rgba(0,0,0,.25);max-width:90vw;text-align:center;transition:opacity .25s;';
+      document.body.appendChild(el);
+    }
+    el.textContent=msg; el.style.opacity='1';
+    clearTimeout(el._t); el._t=setTimeout(function(){ el.style.opacity='0'; },2200);
+  }
+  function calFallbackCopy(txt){
+    var ta=document.createElement('textarea'); ta.value=txt; ta.style.cssText='position:fixed;left:-9999px;top:0;';
+    document.body.appendChild(ta); ta.focus(); ta.select();
+    var ok=false; try{ ok=document.execCommand('copy'); }catch(e){}
+    document.body.removeChild(ta);
+    calToast(ok?'복사됐어요! 카톡·메신저에 붙여넣기 하세요 ✅':'복사에 실패했어요. 직접 선택해서 복사해 주세요');
+  }
+  function calCopyRangeText(){
+    if(!calRange) return;
+    var txt=calBuildRangeText(calRange);
+    if(navigator.clipboard && window.isSecureContext){
+      navigator.clipboard.writeText(txt).then(function(){ calToast('복사됐어요! 카톡·메신저에 붙여넣기 하세요 ✅'); }, function(){ calFallbackCopy(txt); });
+    } else { calFallbackCopy(txt); }
+  }
+  function calShareRangeText(){
+    if(!calRange) return;
+    var txt=calBuildRangeText(calRange);
+    if(navigator.share){ navigator.share({title:'출장 일정', text:txt}).catch(function(){}); }
+    else { calCopyRangeText(); }
+  }
+
+  // 화면(달력)이 선택한 기간을 보여주도록 월 이동
+  function calEnsureVisible(r){
+    var s=parseLocalDate(r.start), e=parseLocalDate(r.end);
+    var inView=(s.getFullYear()===calYear&&s.getMonth()===calMonth)||(e.getFullYear()===calYear&&e.getMonth()===calMonth);
+    if(inView) return;
+    var base=(calDiffDays(s,e)===6)?new Date(s.getFullYear(),s.getMonth(),s.getDate()+4):s;
+    calYear=base.getFullYear(); calMonth=base.getMonth();
+  }
+  function calSelectRange(a,b,scroll){
+    var s=a<=b?a:b, e=a<=b?b:a;
+    calRange={start:s,end:e}; calSelectedDate=null;
+    calEnsureVisible(calRange);
+    renderCalendar();
+    if(scroll && window.innerWidth<=900){
+      var panel=document.getElementById('calDetailPanel');
+      if(panel && panel.scrollIntoView) panel.scrollIntoView({behavior:'smooth',block:'start'});
+    }
+  }
+  function calSelectThisWeek(){
+    var t=parseLocalDate(todayLocalStr());
+    var s=new Date(t.getFullYear(),t.getMonth(),t.getDate()-t.getDay());
+    var e=new Date(s.getFullYear(),s.getMonth(),s.getDate()+6);
+    calSelectRange(formatLocalDate(s),formatLocalDate(e),true);
+  }
+  function calShiftRange(dir){
+    if(!calRange) return;
+    var s=parseLocalDate(calRange.start), e=parseLocalDate(calRange.end);
+    var n=calDiffDays(s,e)+1;
+    s.setDate(s.getDate()+dir*n); e.setDate(e.getDate()+dir*n);
+    calSelectRange(formatLocalDate(s),formatLocalDate(e),false);
+  }
+
+  function renderCalWeekBar(cells){
+    var bar=document.getElementById('calWeekBar'); if(!bar) return;
+    var h='<span class="cal-wk-label">📆 주간 일정</span>';
+    h+='<button class="cal-wk-chip today" onclick="calSelectThisWeek()">📍 이번 주</button>';
+    for(var row=0; row<6; row++){
+      var any=false;
+      for(var c=0;c<7;c++){ if(cells[row*7+c] && cells[row*7+c].thisMonth) any=true; }
+      if(!any) continue;
+      var first=cells[row*7].d, last=cells[row*7+6].d;
+      var s=formatLocalDate(first), e=formatLocalDate(last);
+      var active=calRange && calRange.start===s && calRange.end===e;
+      h+='<button class="cal-wk-chip'+(active?' active':'')+'" onclick="calSelectRange(\''+s+'\',\''+e+'\',true)"><b>'+(row+1)+'주차</b><span>'+calMD(first)+'~'+calMD(last)+'</span></button>';
+    }
+    h+='<div class="cal-wk-hint">💻 PC: 날짜 칸을 마우스로 드래그하면 원하는 기간을 선택할 수 있어요 · 📱 모바일: 주차 버튼을 눌러 주세요</div>';
+    bar.innerHTML=h;
+  }
+
+  function renderWeekPanel(){
+    var r=calRange; if(!r) return;
+    var titleEl=document.getElementById('calDetailTitle');
+    var bodyEl=document.getElementById('calDetailBody');
+    if(!titleEl||!bodyEl) return;
+    titleEl.textContent='📆 '+calRangeTitle(r);
+    var todayStr=todayLocalStr();
+    var h='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">'
+      +'<button class="cal-wk-btn" onclick="calShiftRange(-1)">‹ 이전</button>'
+      +'<button class="cal-wk-btn" onclick="calShiftRange(1)">다음 ›</button>'
+      +'<button class="cal-wk-btn primary" onclick="calCopyRangeText()">📋 텍스트 복사</button>'
+      +(navigator.share?'<button class="cal-wk-btn share" onclick="calShareRangeText()">📤 공유</button>':'')
+      +'</div>';
+    var shown=0;
+    calRangeDays(r).forEach(function(dStr){
+      var items=calDayItems(dStr);
+      if(calIsSkippableDay(dStr,items)) return;
+      shown++;
+      var d=parseLocalDate(dStr), wd=d.getDay();
+      h+='<div class="cal-wk-day'+(dStr===todayStr?' today':'')+'">'
+        +'<div class="cal-wk-dayhead"><span>'+calMD(d)+'</span><span class="wd'+(wd===0?' sun':wd===6?' sat':'')+'">'+CAL_WD[wd]+'</span>'
+        +(items.holiday?'<span class="cal-wk-badge" style="background:#fee2e2;color:#ef4444;">'+calEsc(items.holiday.name)+'</span>':'')
+        +(dStr===todayStr?'<span class="cal-wk-badge" style="background:var(--primary-light);color:var(--primary);">오늘</span>':'')
+        +'</div>';
+      items.trips.forEach(function(t){
+        var ci=PERSONS.indexOf(t.persons[0]);
+        var color=ci>=0?COLORS[ci]:'#94a3b8';
+        var tags=t.persons.map(function(name){
+          var i2=PERSONS.indexOf(name), c2=i2>=0?COLORS[i2]:'#94a3b8';
+          return '<span class="name-tag"><span class="name-avatar" style="background:'+c2+';">'+calEsc(name[0])+'</span>'+calEsc(name)+'</span>';
+        }).join(' ');
+        h+='<div class="cal-wk-trip" style="border-left-color:'+color+';"><div style="display:flex;gap:4px;flex-wrap:wrap;">'+tags+'</div>'
+          +t.sites.map(function(si){
+            return '<div class="cal-wk-site">📍 '+calEsc(si.dest)+(si.units.length?'<span class="cal-wk-unit">'+calEsc(si.units.join(', '))+'</span>':'')
+              +(si.purposes.length?'<div class="cal-wk-purp">'+calEsc(si.purposes.join(', '))+'</div>':'')+'</div>';
+          }).join('')+'</div>';
+      });
+      items.leaves.forEach(function(l){
+        var lv=l.lv;
+        var bg=lv.type==='summer'?'#ffedd5':lv.type==='annual'?'#ede9fe':(lv.color?lv.color+'22':'#e0f2fe');
+        var fg=lv.type==='summer'?'#c2410c':lv.type==='annual'?'#6d28d9':(lv.color?lv.color:'#0369a1');
+        h+='<div class="cal-wk-leave" style="background:'+bg+';color:'+fg+';">'+calLeaveIcon(lv)+' '+calEsc(l.who)+' · '+calEsc(l.name)+(l.note?' ('+calEsc(l.note)+')':'')+'</div>';
+      });
+      if(!items.trips.length&&!items.leaves.length) h+='<div class="cal-wk-empty">'+(items.holiday?'휴일':'일정 없음')+'</div>';
+      h+='</div>';
+    });
+    if(!shown) h+='<div class="empty-state"><div class="icon">📭</div><p>선택한 기간에 표시할 일정이 없습니다.</p></div>';
+    bodyEl.innerHTML=h;
+  }
+
+  // 마우스 드래그로 기간 선택 (PC). 터치 화면은 스크롤과 충돌하므로 주차 버튼 사용
+  var calSuppressClick=false;
+  function calInitDrag(){
+    var grid=document.getElementById('calGrid');
+    if(!grid || grid._dragInit) return;
+    grid._dragInit=true;
+    var startD=null, curD=null, moved=false;
+    function cellOf(e){
+      var el=e.target && e.target.closest ? e.target.closest('[data-date]') : null;
+      return (el && grid.contains(el)) ? el.getAttribute('data-date') : null;
+    }
+    function paint(){
+      var a=startD<curD?startD:curD, b=startD<curD?curD:startD;
+      grid.querySelectorAll('[data-date]').forEach(function(el){
+        var d=el.getAttribute('data-date'), on=moved && d>=a && d<=b;
+        el.style.outline = on ? '3px solid #7c3aed' : '';
+        el.style.outlineOffset = on ? '-3px' : '';
+        el.style.boxShadow = on ? 'inset 0 0 0 200px rgba(124,58,237,.12)' : '';
+      });
+    }
+    grid.addEventListener('mousedown', function(e){
+      if(e.button!==0) return;
+      var d=cellOf(e); if(!d) return;
+      startD=curD=d; moved=false;
+    });
+    grid.addEventListener('mouseover', function(e){
+      if(!startD) return;
+      var d=cellOf(e); if(!d||d===curD) return;
+      curD=d;
+      if(curD!==startD){
+        moved=true; grid.classList.add('dragging');
+        if(window.getSelection) window.getSelection().removeAllRanges();
+      }
+      paint();
+    });
+    document.addEventListener('mouseup', function(){
+      if(!startD) return;
+      var did=moved && curD!==startD, a=startD, b=curD;
+      startD=null; moved=false; grid.classList.remove('dragging');
+      if(did){
+        calSuppressClick=true; setTimeout(function(){ calSuppressClick=false; },50);
+        calSelectRange(a,b,true);
+      }
+    });
+    grid.addEventListener('click', function(e){
+      if(calSuppressClick){ e.stopPropagation(); e.preventDefault(); }
+    }, true);
   }
 
   function calResetDetailPanel() {
@@ -4551,12 +4854,12 @@
     // 이미 선택된 날짜를 다시 클릭하면 선택 해제하고 패널을 원상태로 되돌린다
     // (단, 데이터 변경 후 패널을 새로고침하는 내부 호출(forceShow=true)에는 적용하지 않는다)
     if (!forceShow && calSelectedDate === dateStr) {
-      calSelectedDate = null;
+      calSelectedDate = null; calRange = null;
       renderCalendar();
       calResetDetailPanel();
       return;
     }
-    calSelectedDate = dateStr;
+    calSelectedDate = dateStr; calRange = null;
     renderCalendar();
 
     // 해당 날짜에 걸친 출장 찾기
