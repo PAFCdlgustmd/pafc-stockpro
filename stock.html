@@ -8317,6 +8317,48 @@ function drawSiteBar(outLogs, filterDesc){
 
 // ── 품목별 막대 ──
 function drawItemBar(outLogs, filterDesc){
+  const selItem = document.getElementById('an-item').value;
+  const selHogi = document.getElementById('an-hogi').value;
+  const selSite = document.getElementById('an-site').value;
+
+  // 품목을 하나 선택하고 '전체 호기'인 경우 → 호기별 사용량 분석
+  if(selItem && !selHogi){
+    document.getElementById('an-chart-title').textContent = `호기별 사용량 — ${filterDesc}`;
+    const hmap = {};
+    const order = {};
+    outLogs.forEach(l=>{
+      const hasHogi = l.hogi!==undefined && l.hogi!==null && l.hogi!=='';
+      const siteName = (l.site && String(l.site).trim()) ? String(l.site).trim() : '(현장없음)';
+      const hogiLabel = hasHogi ? String(l.hogi)+'호기' : '호기 미지정';
+      const label = selSite ? hogiLabel : (siteName+' '+hogiLabel);
+      hmap[label] = (hmap[label]||0) + l.qty;
+      order[label] = [siteName, hasHogi ? Number(l.hogi) : 9999];
+    });
+    const hLabels = Object.keys(hmap).sort((a,b)=>{
+      const [sa,ha]=order[a], [sb,hb]=order[b];
+      if(sa!==sb) return sa.localeCompare(sb,'ko');
+      return (isNaN(ha)||isNaN(hb)) ? a.localeCompare(b,'ko') : ha-hb;
+    });
+    const hctx = document.getElementById('an-chart').getContext('2d');
+    anChart = new Chart(hctx, {
+      type:'bar',
+      data:{ labels:hLabels, datasets:[{ label:'사용량', data:hLabels.map(k=>hmap[k]), backgroundColor:hLabels.map((_,i)=>CHART_COLORS[i%CHART_COLORS.length]+'CC'), borderRadius:5 }] },
+      options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false} }, scales:{ y:{ beginAtZero:true } } }
+    });
+    const htotal = hLabels.reduce((a,k)=>a+hmap[k],0);
+    const top = hLabels.reduce((best,k)=> (best===null || hmap[k]>hmap[best]) ? k : best, null);
+    renderSummaryCards([
+      {label:'총 사용량', value:htotal+'개', color:'#185FA5'},
+      {label:'호기 수', value:hLabels.length+'개', color:'#1D9E75'},
+      {label:'최다 사용 호기', value:top||'-', color:'#D85A30'},
+      {label:'호기당 평균', value:(hLabels.length?Math.round(htotal/hLabels.length*10)/10:0)+'개', color:'#534AB7'},
+    ]);
+    const hrows = hLabels.map(k=>`<tr><td style="font-weight:500">${k}</td><td>${hmap[k]}</td><td>${htotal?Math.round(hmap[k]/htotal*100):0}%</td></tr>`);
+    hrows.push(`<tr style="background:#E6F1FB;font-weight:500"><td>합계</td><td style="color:#185FA5">${htotal}</td><td>100%</td></tr>`);
+    document.getElementById('an-table').innerHTML=`<thead><tr><th>${selSite?'호기':'현장 / 호기'}</th><th>사용량</th><th>비율</th></tr></thead><tbody>${hrows.join('')}</tbody>`;
+    return;
+  }
+
   document.getElementById('an-chart-title').textContent = `품목별 출고량 — ${filterDesc}`;
   const map = {};
   outLogs.forEach(l=>{ map[l.item]=(map[l.item]||0)+l.qty; });
