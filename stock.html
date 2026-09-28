@@ -338,6 +338,26 @@ tr:hover td{background:#E6F1FB;}
 .es-mobile-row:last-child { border-bottom:none; }
 .es-month-pick-btn { padding:8px 0; font-size:12px; border-radius:8px; border:0.5px solid #B5D4F4; background:#fff; color:#185FA5; cursor:pointer; }
 .es-month-pick-btn.active { background:#185FA5; color:#fff; border-color:#185FA5; }
+/* 📱 모바일: 현재 재고 표를 한 화면에 맞춤 */
+@media (max-width: 540px) {
+  .inv-table{width:100%;table-layout:fixed;font-size:12px;}
+  .inv-table th{font-size:11px;padding:8px 3px;text-align:center;line-height:1.25;word-break:keep-all;}
+  .inv-table th:first-child{text-align:left;padding-left:8px;}
+  .inv-table td{padding:9px 3px;white-space:normal;}
+  .inv-table .inv-name{font-size:13px;line-height:1.3;word-break:keep-all;overflow-wrap:anywhere;padding-left:8px;}
+  .inv-table tr:not(.inv-cat-row) .inv-name{padding-left:8px;}
+  .inv-table .inv-stock{font-size:14px;}
+  .inv-table .inv-num{font-size:13px;}
+  .inv-table .inv-status{font-size:10.5px;white-space:normal;line-height:1.25;}
+  .inv-table tr.inv-cat-row td{padding:7px 8px;font-size:12px;}
+  .inv-table th, .inv-table td{width:auto !important;}
+  .inv-table th:nth-child(1), .inv-table td:nth-child(1){width:34% !important;}
+  .inv-table th:nth-child(2), .inv-table td:nth-child(2){width:15% !important;}
+  .inv-table th:nth-child(3), .inv-table td:nth-child(3){width:15% !important;}
+  .inv-table th:nth-child(4), .inv-table td:nth-child(4){width:15% !important;}
+  .inv-table th:nth-child(5), .inv-table td:nth-child(5){width:21% !important;}
+  .inv-tool-bar{flex-wrap:wrap;gap:6px;}
+}
 @media (max-width: 700px) {
   body.es-view-active #es-pc-wrap { display:none; }
   body.es-view-active #es-mobile-card.show { display:block; }
