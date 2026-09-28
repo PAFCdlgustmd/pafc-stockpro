@@ -67,14 +67,6 @@ tr:hover td{background:#E6F1FB;}
 .inv-table tr:hover td{background:#E6F1FB;}
 
 .sec-title{font-size:13px;font-weight:500;color:#185FA5;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
-.io-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px 20px;margin-bottom:16px;}
-.io-field{display:flex;flex-direction:column;gap:6px;min-width:0;}
-.io-field-label{font-size:13px;font-weight:500;color:#222;}
-.io-field input,.io-field select{width:100%;font-size:14px;padding:9px 12px;border:0.5px solid #ccc;border-radius:8px;outline:none;background:#fff;}
-.io-field input:focus,.io-field select:focus{border-color:#185FA5;}
-.io-field .multi-select{width:100% !important;flex:none;}
-.io-field .multi-box{width:100%;box-sizing:border-box;}
-.io-field-full{grid-column:1 / -1;}
 .input-row{display:flex;gap:8px;margin-bottom:10px;}
 .input-row input,.input-row select{flex:1;font-size:13px;padding:8px 10px;border:0.5px solid #ccc;border-radius:8px;outline:none;}
 .input-row input:focus,.input-row select:focus{border-color:#185FA5;}
@@ -118,18 +110,16 @@ tr:hover td{background:#E6F1FB;}
 .multi-chip .mc-x:hover{color:#A32D2D;}
 .multi-panel{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1px solid #B5D4F4;border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,0.15);max-height:220px;overflow-y:auto;z-index:30;display:none;}
 .multi-panel.show{display:block;}
-.multi-opt{display:flex;align-items:center;gap:10px;padding:9px 12px;font-size:13px;cursor:pointer;justify-content:flex-start;}
+.multi-opt{display:flex;align-items:center;gap:8px;padding:8px 12px;font-size:13px;cursor:pointer;justify-content:space-between;}
 .multi-opt:hover{background:#E6F1FB;}
-.multi-opt .opt-label{flex:1 1 auto;min-width:0;white-space:normal;word-break:keep-all;overflow-wrap:break-word;line-height:1.35;}
-.multi-opt input{width:16px;height:16px;accent-color:#185FA5;flex:0 0 16px !important;margin:0;}
-.multi-cat-header{padding:6px 12px;font-size:12px;font-weight:500;color:#185FA5;background:#E6F1FB;position:sticky;top:0;}
-#io-item-multi{flex:0 0 auto;max-width:100%;}
+.multi-opt .opt-label{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.multi-opt input{width:16px;height:16px;accent-color:#185FA5;flex-shrink:0;margin-left:10px;}
 
 /* 호기 선택: 좌측 이름 - 우측 체크박스, 여백 최소화된 그리드 배치 */
 .hogi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:2px 4px;padding:8px 10px;}
 .hogi-opt{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:7px 10px;font-size:13px;cursor:pointer;border-radius:6px;}
 .hogi-opt:hover{background:#E6F1FB;}
-.hogi-opt input{width:16px;height:16px;accent-color:#185FA5;flex:0 0 16px !important;}
+.hogi-opt input{width:16px;height:16px;accent-color:#185FA5;flex-shrink:0;}
 
 .hogi-add-row{display:flex;gap:6px;padding:8px;border-top:1px solid #eee;position:sticky;bottom:0;background:#fff;}
 .hogi-add-row input{flex:1;font-size:12px;padding:6px 8px;border:1px solid #ccc;border-radius:6px;outline:none;}
@@ -287,8 +277,6 @@ tr:hover td{background:#E6F1FB;}
   /* 입출고 탭: input-row 세로 스택 */
   .input-row { flex-wrap: wrap; gap: 6px; }
   .input-row select, .input-row input { flex: 1 1 calc(50% - 3px); min-width: 0; }
-  .io-form-grid { grid-template-columns: 1fr; gap: 10px; }
-  #io-type { flex: 1 1 100%; }
   .site-wrap { flex: 1 1 100%; }
   .btn-reg { width: 100%; padding: 12px; font-size: 14px; }
 
@@ -610,82 +598,63 @@ tr:hover td{background:#E6F1FB;}
     <div class="card card-pad">
       <div class="sec-title"><i class="ti ti-plus"></i> 개별 입출고 등록</div>
 
-      <div class="io-form-grid">
-        <div class="io-field">
-          <label class="io-field-label">구분</label>
-          <select id="io-type">
-            <option value="out">출고</option>
-            <option value="in">입고</option>
-          </select>
+      <div class="input-row">
+        <select id="io-type">
+          <option value="out">출고</option>
+          <option value="in">입고</option>
+        </select>
+        <div class="multi-select" id="io-item-multi">
+          <div class="multi-box" id="io-item-box" onclick="toggleMultiPanel('io-item-panel')">
+            <span class="multi-placeholder">품목 선택 (다중 가능)</span>
+          </div>
+          <div class="multi-panel" id="io-item-panel"></div>
         </div>
+      </div>
 
-        <div class="io-field">
-          <label class="io-field-label">등록 일자</label>
-          <input type="text" id="io-date" placeholder="예: 2026-09-18">
+      <div class="input-row" style="align-items:center;">
+        <div class="site-wrap">
+          <select id="io-site-sel" style="flex:1;"><option value="">현장 선택</option><option value="공덕역 오피스텔">공덕역 오피스텔</option><option value="다모테크">다모테크</option><option value="아쿠아시티">아쿠아시티</option><option value="그린파크">그린파크</option><option value="유일산업">유일산업</option><option value="한사랑사우나">한사랑사우나</option><option value="선비사우나">선비사우나</option><option value="겐지스사우나">겐지스사우나</option><option value="미래개발원">미래개발원</option><option value="두류수영장">두류수영장</option><option value="천호사우나">천호사우나</option><option value="중구수영장">중구수영장</option><option value="후지전기">후지전기</option><option value="KT대관령수련관">KT대관령수련관</option><option value="공덕역 오피스텔">공덕역 오피스텔</option><option value="다모테크">다모테크</option></select>
         </div>
+        <input type="number" id="io-qty" placeholder="수량" min="1" style="flex:1;">
+      </div>
 
-        <div class="io-field">
-          <label class="io-field-label">현장 선택</label>
-          <select id="io-site-sel"><option value="">현장 선택</option><option value="공덕역 오피스텔">공덕역 오피스텔</option><option value="다모테크">다모테크</option><option value="아쿠아시티">아쿠아시티</option><option value="그린파크">그린파크</option><option value="유일산업">유일산업</option><option value="한사랑사우나">한사랑사우나</option><option value="선비사우나">선비사우나</option><option value="겐지스사우나">겐지스사우나</option><option value="미래개발원">미래개발원</option><option value="두류수영장">두류수영장</option><option value="천호사우나">천호사우나</option><option value="중구수영장">중구수영장</option><option value="후지전기">후지전기</option><option value="KT대관령수련관">KT대관령수련관</option><option value="공덕역 오피스텔">공덕역 오피스텔</option><option value="다모테크">다모테크</option></select>
-        </div>
-
-        <div class="io-field">
-          <label class="io-field-label">호기 선택</label>
-          <div class="multi-select" id="io-hogi-multi">
-            <div class="multi-box" id="io-hogi-box" onclick="toggleMultiPanel('io-hogi-panel')">
-              <span class="multi-placeholder">호기 선택 (다중 가능, 없으면 비워두세요)</span>
+      <div class="input-row">
+        <div class="multi-select" id="io-hogi-multi">
+          <div class="multi-box" id="io-hogi-box" onclick="toggleMultiPanel('io-hogi-panel')">
+            <span class="multi-placeholder">호기 선택 (다중 가능, 없으면 비워두세요)</span>
+          </div>
+          <div class="multi-panel" id="io-hogi-panel">
+            <div class="hogi-grid" id="io-hogi-grid">
+              <label class="hogi-opt"><span class="opt-label">1호기</span><input type="checkbox" value="1" onchange="updateHogiChips()"></label>
+              <label class="hogi-opt"><span class="opt-label">2호기</span><input type="checkbox" value="2" onchange="updateHogiChips()"></label>
+              <label class="hogi-opt"><span class="opt-label">3호기</span><input type="checkbox" value="3" onchange="updateHogiChips()"></label>
+              <label class="hogi-opt"><span class="opt-label">4호기</span><input type="checkbox" value="4" onchange="updateHogiChips()"></label>
+              <label class="hogi-opt"><span class="opt-label">5호기</span><input type="checkbox" value="5" onchange="updateHogiChips()"></label>
+              <label class="hogi-opt"><span class="opt-label">6호기</span><input type="checkbox" value="6" onchange="updateHogiChips()"></label>
+              <label class="hogi-opt"><span class="opt-label">7호기</span><input type="checkbox" value="7" onchange="updateHogiChips()"></label>
+              <label class="hogi-opt"><span class="opt-label">8호기</span><input type="checkbox" value="8" onchange="updateHogiChips()"></label>
+              <label class="hogi-opt"><span class="opt-label">9호기</span><input type="checkbox" value="9" onchange="updateHogiChips()"></label>
+              <label class="hogi-opt"><span class="opt-label">10호기</span><input type="checkbox" value="10" onchange="updateHogiChips()"></label>
             </div>
-            <div class="multi-panel" id="io-hogi-panel">
-              <div class="hogi-grid" id="io-hogi-grid">
-                <label class="hogi-opt"><span class="opt-label">1호기</span><input type="checkbox" value="1" onchange="updateHogiChips()"></label>
-                <label class="hogi-opt"><span class="opt-label">2호기</span><input type="checkbox" value="2" onchange="updateHogiChips()"></label>
-                <label class="hogi-opt"><span class="opt-label">3호기</span><input type="checkbox" value="3" onchange="updateHogiChips()"></label>
-                <label class="hogi-opt"><span class="opt-label">4호기</span><input type="checkbox" value="4" onchange="updateHogiChips()"></label>
-                <label class="hogi-opt"><span class="opt-label">5호기</span><input type="checkbox" value="5" onchange="updateHogiChips()"></label>
-                <label class="hogi-opt"><span class="opt-label">6호기</span><input type="checkbox" value="6" onchange="updateHogiChips()"></label>
-                <label class="hogi-opt"><span class="opt-label">7호기</span><input type="checkbox" value="7" onchange="updateHogiChips()"></label>
-                <label class="hogi-opt"><span class="opt-label">8호기</span><input type="checkbox" value="8" onchange="updateHogiChips()"></label>
-                <label class="hogi-opt"><span class="opt-label">9호기</span><input type="checkbox" value="9" onchange="updateHogiChips()"></label>
-                <label class="hogi-opt"><span class="opt-label">10호기</span><input type="checkbox" value="10" onchange="updateHogiChips()"></label>
-              </div>
-              <div class="hogi-add-row">
-                <input type="text" id="io-hogi-custom" placeholder="직접 입력 후 추가 (예: 12)">
-                <button type="button" onclick="addCustomHogi()">추가</button>
-              </div>
+            <div class="hogi-add-row">
+              <input type="text" id="io-hogi-custom" placeholder="직접 입력 후 추가 (예: 12)">
+              <button type="button" onclick="addCustomHogi()">추가</button>
             </div>
           </div>
         </div>
+      </div>
 
-        <div class="io-field">
-          <label class="io-field-label">품목 선택</label>
-          <div class="multi-select" id="io-item-multi">
-            <div class="multi-box" id="io-item-box" onclick="toggleMultiPanel('io-item-panel')">
-              <span class="multi-placeholder">품목 선택 (다중 가능)</span>
-            </div>
-            <div class="multi-panel" id="io-item-panel"></div>
-          </div>
-        </div>
-
-        <div class="io-field">
-          <label class="io-field-label">수량</label>
-          <input type="number" id="io-qty" placeholder="수량" min="1">
-        </div>
-
-        <div class="io-field">
-          <label class="io-field-label">등록자</label>
-          <select id="io-writer"><option value="">등록자 선택</option><option value="이현승">이현승</option><option value="민경현">민경현</option><option value="김희창">김희창</option><option value="이상구">이상구</option></select>
-        </div>
-
-        <div></div>
-
-        <div class="io-field io-field-full">
-          <label class="io-field-label">비고 (선택)</label>
-          <input type="text" id="io-note" placeholder="비고 (선택)">
-        </div>
-
-        <div class="io-field-full">
-          <button class="btn-reg" id="btn-reg-io" onclick="registerIO()" style="width:100%;padding:12px;font-size:14px;"><i class="ti ti-check"></i> 등록</button>
-        </div>
+      <div class="input-row">
+        <input type="text" id="io-date" placeholder="날짜 (예: 2026-05-20)" style="flex:1;">
+      </div>
+      <div class="input-row">
+        <select id="io-writer" style="flex:1;font-size:13px;padding:8px 10px;border:0.5px solid #ccc;border-radius:8px;outline:none;"><option value="">등록자 선택</option><option value="이현승">이현승</option><option value="민경현">민경현</option><option value="김희창">김희창</option><option value="이상구">이상구</option></select>
+      </div>
+      <div class="input-row">
+        <button class="btn-reg" id="btn-reg-io" onclick="registerIO()" style="width:100%;padding:12px;font-size:14px;"><i class="ti ti-check"></i> 등록</button>
+      </div>
+      <div class="input-row">
+        <input type="text" id="io-note" placeholder="비고 (선택)" style="flex:1;">
       </div>
       <div id="io-msg"></div>
 
@@ -700,6 +669,14 @@ tr:hover td{background:#E6F1FB;}
             <input type="text" id="new-item-input" placeholder="새로운 품목명 입력" style="flex:1;font-size:13px;padding:8px 10px;border:1px solid #B5D4F4;border-radius:8px;outline:none;background:#fff;">
             <button type="button" onclick="addItem()" style="background:#185FA5;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;cursor:pointer;font-weight:500;white-space:nowrap;"><i class="ti ti-plus"></i> 추가</button>
             <button type="button" onclick="deleteItem()" style="background:#FCEBEB;color:#A32D2D;border:1px solid #F7C1C1;border-radius:8px;padding:8px 14px;font-size:13px;cursor:pointer;white-space:nowrap;"><i class="ti ti-trash"></i> 삭제</button>
+          </div>
+
+          <!-- 품목명 변경 -->
+          <div style="font-size:11px;color:#555;font-weight:500;margin-bottom:6px;">품목명 변경</div>
+          <div style="display:flex;gap:6px;margin-bottom:12px;">
+            <select id="rename-item-sel" style="flex:1;font-size:13px;padding:8px 10px;border:1px solid #B5D4F4;border-radius:8px;outline:none;background:#fff;"></select>
+            <input type="text" id="rename-item-input" placeholder="새 품목명 입력" style="flex:1;font-size:13px;padding:8px 10px;border:1px solid #B5D4F4;border-radius:8px;outline:none;background:#fff;">
+            <button type="button" onclick="renameItem()" style="background:#185FA5;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;cursor:pointer;font-weight:500;white-space:nowrap;"><i class="ti ti-edit"></i> 변경</button>
           </div>
 
           <!-- 구분선 -->
@@ -7258,6 +7235,28 @@ async function deleteItem(){
   alert(`"${name}" 품목이 삭제되었습니다.`);
 }
 
+async function renameItem(){
+  const sel = document.getElementById('rename-item-sel');
+  const input = document.getElementById('rename-item-input');
+  const oldName = sel.value;
+  const newName = input.value.trim();
+  if(!oldName){ alert('변경할 품목을 선택하세요.'); return; }
+  if(!newName){ alert('새 품목명을 입력하세요.'); return; }
+  if(newName === oldName){ alert('기존 품목명과 동일합니다.'); return; }
+  if(inv.find(i=>i.name===newName)){ alert(`"${newName}" 품목이 이미 존재합니다.`); return; }
+  if(!confirm(`"${oldName}" → "${newName}"(으)로 변경할까요?\n재고 수량과 입출고 이력은 그대로 유지됩니다.`)) return;
+
+  const item = inv.find(i=>i.name===oldName);
+  if(item) item.name = newName;
+  logs.forEach(l=>{ if(l.item===oldName) l.item = newName; });
+
+  populateSels();
+  input.value = '';
+  await saveToCloud();
+  renderInv();
+  alert(`"${oldName}"이(가) "${newName}"(으)로 변경되었습니다.`);
+}
+
 async function addSite(){
   const input = document.getElementById('new-site-input');
   const name  = input.value.trim();
@@ -7315,45 +7314,24 @@ async function delWriter(){
   await saveToCloud();
 }
 
-function fitItemSelectWidth(){
-  const el = document.getElementById('io-item-multi');
-  if(!el) return;
-  const canvas = fitItemSelectWidth._canvas || (fitItemSelectWidth._canvas = document.createElement('canvas'));
-  const ctx = canvas.getContext('2d');
-  ctx.font = '13px sans-serif';
-  const placeholder = '품목 선택 (다중 가능)';
-  let maxTextWidth = ctx.measureText(placeholder).width;
-  inv.forEach(i=>{
-    const w = ctx.measureText(i.name).width;
-    if(w > maxTextWidth) maxTextWidth = w;
-  });
-  const avgCharWidth = ctx.measureText('가').width;
-  const extraChars = avgCharWidth * 3;         // 여유 3글자
-  const checkboxAndGap = 16 + 10;              // 체크박스 너비 + 간격
-  const boxPadding = 12 * 2;                   // 옵션 좌우 패딩
-  const width = Math.ceil(maxTextWidth + extraChars + checkboxAndGap + boxPadding + 4);
-  el.style.width = Math.max(width, 160) + 'px';
-}
-
 function populateSels(){
   const panel = document.getElementById('io-item-panel');
   const lf = document.getElementById('log-filter-item');
   lf.innerHTML = '<option value="">전체 품목</option>';
-  const itemGroups = [...CATEGORY_ORDER, "기타"].map(cat => ({
-    category: cat,
-    items: inv.filter(i => categoryOf(i.name) === cat)
-  })).filter(g => g.items.length > 0);
-  panel.innerHTML = itemGroups.map(g => `
-    <div class="multi-cat-header">${g.category}</div>
-    ${g.items.map(i=>`<label class="multi-opt"><input type="checkbox" value="${i.name}" onchange="updateItemChips()"><span class="opt-label">${i.name}</span></label>`).join('')}
-  `).join('');
-  fitItemSelectWidth();
+  panel.innerHTML = inv.map(i=>`<label class="multi-opt"><span class="opt-label">${i.name}</span><input type="checkbox" value="${i.name}" onchange="updateItemChips()"></label>`).join('');
   inv.forEach(i=>{
     lf.innerHTML += `<option value="${i.name}">${i.name}</option>`;
   });
   updateItemChips();
   renderSiteSel();
   renderWriterSel();
+
+  const renameSel = document.getElementById('rename-item-sel');
+  if(renameSel){
+    const prevVal = renameSel.value;
+    renameSel.innerHTML = inv.map(i=>`<option value="${i.name}">${i.name}</option>`).join('');
+    if(prevVal && inv.find(i=>i.name===prevVal)) renameSel.value = prevVal;
+  }
 }
 
 /* ===== 다중선택 공통 유틸 ===== */
