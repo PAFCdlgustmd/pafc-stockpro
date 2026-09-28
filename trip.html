@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.5, maximum-scale=5.0, user-scalable=yes"/>
   <title>출장 관리 시스템</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght=300;400;500;600;700&display=swap');
@@ -6752,6 +6752,45 @@
     document.body.removeChild(a); URL.revokeObjectURL(url);
   }
 
+</script>
+
+<!-- ── 화면 확대/축소 컨트롤 (모바일) ── -->
+<style>
+  #zoomCtl{position:fixed;right:10px;bottom:90px;z-index:9999;display:none;flex-direction:column;gap:6px;
+    background:rgba(255,255,255,.95);border:1px solid #dde3ec;border-radius:14px;padding:6px;
+    box-shadow:0 2px 10px rgba(0,0,0,.2);touch-action:manipulation;}
+  #zoomCtl button{width:40px;height:40px;border-radius:10px;border:1.5px solid #dde3ec;background:#fff;
+    color:#2563eb;font-size:1.2rem;font-weight:700;font-family:inherit;cursor:pointer;line-height:1;}
+  #zoomCtl button:active{background:#dbeafe;}
+  #zoomCtl .zl{font-size:.68rem;font-weight:700;color:#64748b;text-align:center;}
+  #zoomCtl #zoomReset{font-size:.72rem;}
+  @media (max-width:900px){ #zoomCtl{display:flex;} }
+  @media print{ #zoomCtl{display:none !important;} }
+</style>
+<div id="zoomCtl">
+  <button id="zoomIn" aria-label="확대">＋</button>
+  <div class="zl" id="zoomLabel">100%</div>
+  <button id="zoomOut" aria-label="축소">－</button>
+  <button id="zoomReset" aria-label="원래 크기">1:1</button>
+</div>
+<script>
+(function(){
+  var KEY='pageZoomLevel', MIN=0.5, MAX=2.0, STEP=0.1;
+  var ctl=document.getElementById('zoomCtl'), label=document.getElementById('zoomLabel');
+  var z=1;
+  try{ var s=parseFloat(localStorage.getItem(KEY)); if(s>=MIN && s<=MAX) z=s; }catch(e){}
+  function apply(){
+    z=Math.round(Math.min(MAX,Math.max(MIN,z))*100)/100;
+    document.documentElement.style.zoom = (z===1?'':z);
+    ctl.style.zoom = (z===1?'':(1/z));   // 컨트롤 자체는 크기 고정
+    label.textContent=Math.round(z*100)+'%';
+    try{ localStorage.setItem(KEY,String(z)); }catch(e){}
+  }
+  document.getElementById('zoomIn').onclick=function(){ z+=STEP; apply(); };
+  document.getElementById('zoomOut').onclick=function(){ z-=STEP; apply(); };
+  document.getElementById('zoomReset').onclick=function(){ z=1; apply(); };
+  apply();
+})();
 </script>
 </body>
 </html>
