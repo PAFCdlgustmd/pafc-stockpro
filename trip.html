@@ -280,7 +280,8 @@
     .insp-print-table td.site input{width:100%;border:none;background:transparent;font-size:.68rem;text-align:center;font-family:inherit;}
     .insp-print-table td input[type=date]{width:100%;border:none;background:transparent;font-size:.66rem;text-align:center;font-family:inherit;padding:0;}
     .insp-print-table td.off-range{background:#f8fafc;}
-    .insp-print-table td[data-insp-cell]{cursor:pointer;background:#fff;}
+    .insp-print-table td[data-insp-cell]{cursor:pointer;background:#fff;touch-action:manipulation;
+      -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:rgba(124,58,237,.25);}
     .insp-print-table td.work{background:#4ade80 !important;}
     .insp-print-table th.sun{color:#dc2626;}
     .insp-print-table th.sat{color:#2563eb;}
@@ -295,7 +296,7 @@
       .insp-print-table td.site{min-width:76px;}
       .insp-print-table td.site input{font-size:.68rem;width:100%;min-width:64px;}
       .insp-print-table td input[type=date]{font-size:.62rem;min-width:74px;}
-      .insp-print-table td[data-insp-cell]{min-width:22px;}
+      .insp-print-table td[data-insp-cell]{min-width:30px;height:34px;}
     }
 
     /* ── 정기점검 표 전체화면(모바일 전용) ── */
@@ -2275,6 +2276,29 @@
   function getCheckedPersons() { return PERSONS.filter((_,i) => document.getElementById(`cb-p-${i}`).checked); }
   function getCheckedDestinations() { return DESTINATIONS.filter((_,i) => document.getElementById(`cb-d-${i}`).checked); }
   function calcDays(s,e){ return Math.max(1, Math.round((new Date(e) - new Date(s)) / 86400000) + 1); }
+  // 월 필터가 걸린 경우, 여러 달에 걸친 출장은 "해당 월에 속한 날짜/박수만" 센다.
+  // (예: 9/29~10/1 출장은 10월 기준 1일, 숙박 0박 — 숙박은 밤이 시작되는 날짜 기준)
+  function _monthRange(ym){
+    var y = parseInt(ym.substring(0,4),10), m = parseInt(ym.substring(5,7),10);
+    return [new Date(y, m-1, 1), new Date(y, m, 0)];
+  }
+  function tripDaysIn(t, ym){
+    if (!ym || ym === '전체') return t.days;
+    var r = _monthRange(ym);
+    var s = parseLocalDate(t.start), e = parseLocalDate(t.end || t.start);
+    var from = s > r[0] ? s : r[0], to = e < r[1] ? e : r[1];
+    return Math.max(0, Math.round((to - from) / 86400000) + 1);
+  }
+  function tripNightsIn(t, ym){
+    if (!ym || ym === '전체') return t.nights;
+    var r = _monthRange(ym);
+    var s = parseLocalDate(t.start), n = 0;
+    for (var i = 0; i < (t.nights || 0); i++) {
+      var d = new Date(s.getFullYear(), s.getMonth(), s.getDate() + i);
+      if (d >= r[0] && d <= r[1]) n++;
+    }
+    return n;
+  }
   function fmt(d){
     if (!d) return "";
     var dateOnly = toDateInputValue(d);
@@ -3135,8 +3159,8 @@
       const idx = PERSONS.indexOf(name);
       let pt = trips.filter(t => t.persons.includes(name));
       if(currentMonth !== '전체') pt = pt.filter(t => { const s=t.start.substring(0,7), e=(t.end||t.start).substring(0,7); return s<=currentMonth && currentMonth<=e; });
-      const pd    = pt.reduce((s,t) => s+t.days, 0);
-      const pn    = pt.reduce((s,t) => s+t.nights, 0);
+      const pd    = pt.reduce((s,t) => s+tripDaysIn(t, currentMonth), 0);
+      const pn    = pt.reduce((s,t) => s+tripNightsIn(t, currentMonth), 0);
       const pOver = Math.max(0, pd - MIN);
       const pct   = Math.min(100, Math.round((pd/MIN)*100));
       const color = COLORS[idx];
@@ -3213,8 +3237,8 @@
     const monthLabel  = currentMonth === '전체' ? '전체 월' : `${currentMonth.split('-')[0]}년 ${currentMonth.split('-')[1]}월`;
 
     // 대시보드 스코어 보드용 누계 연산
-    let totalDays = filtered.reduce((s, t) => s + t.days, 0);
-    let totalNights = filtered.reduce((s, t) => s + t.nights, 0);
+    let totalDays = filtered.reduce((s, t) => s + tripDaysIn(t, currentMonth), 0);
+    let totalNights = filtered.reduce((s, t) => s + tripNightsIn(t, currentMonth), 0);
     
     let over = 0;
     if (currentPerson !== '전체') {
@@ -3347,8 +3371,8 @@
     document.getElementById('allSummaryBody').innerHTML = PERSONS.map((name, idx) => {
       let pt = trips.filter(t => t.persons.includes(name));
       if (currentMonth !== '전체') pt = pt.filter(t => { const s=t.start.substring(0,7), e=(t.end||t.start).substring(0,7); return s<=currentMonth && currentMonth<=e; });
-      const days = pt.reduce((s, t) => s + t.days, 0);
-      const nts = pt.reduce((s, t) => s + t.nights, 0);
+      const days = pt.reduce((s, t) => s + tripDaysIn(t, currentMonth), 0);
+      const nts = pt.reduce((s, t) => s + tripNightsIn(t, currentMonth), 0);
       const pOver = Math.max(0, days - MIN);
       const pct = Math.min(100, Math.round((days / MIN) * 100));
       const color = COLORS[idx];
@@ -6033,13 +6057,13 @@
     var idx = INSP_MARK_CYCLE.indexOf(cur);
     var next = INSP_MARK_CYCLE[(idx + 1) % INSP_MARK_CYCLE.length];
     if(next) row.marks[dateStr] = next; else delete row.marks[dateStr];
-    saveInspections();
     // 셀 하나만 갱신 (연도별로 나뉜 화면 중 해당 날짜가 속한 블록만 매칭됨)
     var cells = document.querySelectorAll('td[data-insp-cell="'+id+'_'+dateStr+'"]');
     cells.forEach(function(cell){
       cell.innerHTML = inspMarkHtml(next);
       cell.style.background = inspMarkBg(next) || '#fff';
     });
+    try { saveInspections(); } catch(e){ console.error('inspection mark save error', e); }
   }
 
   function inspMarkHtml(type){
