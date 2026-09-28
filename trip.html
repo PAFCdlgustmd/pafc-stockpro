@@ -358,6 +358,16 @@
     .insp-fs-rotate-wrap .insp-print-table td.site{min-width:80px;}
     .insp-fs-rotate-wrap .insp-print-table td.site input{font-size:.7rem;width:100%;min-width:68px;}
     .insp-fs-rotate-wrap .insp-print-table td input[type=date]{font-size:.64rem;min-width:76px;}
+
+    /* ── 화면 확대/축소 바 ── */
+    #zoomBar{display:flex;align-items:center;justify-content:flex-end;gap:6px;padding:6px 12px;
+      background:#f8fafc;border-bottom:1px solid var(--border);touch-action:manipulation;}
+    #zoomBar .zt{font-size:.72rem;font-weight:700;color:var(--text-muted);margin-right:auto;}
+    #zoomBar button{min-width:44px;height:36px;padding:0 10px;border-radius:18px;border:1.5px solid var(--primary);
+      background:#fff;color:var(--primary);font-size:1rem;font-weight:700;font-family:inherit;cursor:pointer;}
+    #zoomBar button:active{background:var(--primary-light);}
+    #zoomBar .zl{min-width:48px;text-align:center;font-size:.8rem;font-weight:700;color:var(--text);}
+    @media print{#zoomBar{display:none !important;}}
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 </head>
@@ -621,6 +631,14 @@
     <button class="btn-excel" onclick="exportExcel()">📥 <span class="btn-label">엑셀 저장</span></button>
   </div>
 </header>
+
+<div id="zoomBar">
+  <span class="zt">🔍 화면 크기</span>
+  <button id="zoomOut" type="button" aria-label="축소">－</button>
+  <span class="zl" id="zoomLabel">100%</span>
+  <button id="zoomIn" type="button" aria-label="확대">＋</button>
+  <button id="zoomReset" type="button" aria-label="원래 크기">1:1</button>
+</div>
 
 <div class="sub-nav-bar">
   <nav class="main-nav">
@@ -6754,35 +6772,14 @@
 
 </script>
 
-<!-- ── 화면 확대/축소 컨트롤 (모바일) ── -->
-<style>
-  #zoomCtl{position:fixed;right:10px;bottom:90px;z-index:9999;display:none;flex-direction:column;gap:6px;
-    background:rgba(255,255,255,.95);border:1px solid #dde3ec;border-radius:14px;padding:6px;
-    box-shadow:0 2px 10px rgba(0,0,0,.2);touch-action:manipulation;}
-  #zoomCtl button{width:40px;height:40px;border-radius:10px;border:1.5px solid #dde3ec;background:#fff;
-    color:#2563eb;font-size:1.2rem;font-weight:700;font-family:inherit;cursor:pointer;line-height:1;}
-  #zoomCtl button:active{background:#dbeafe;}
-  #zoomCtl .zl{font-size:.68rem;font-weight:700;color:#64748b;text-align:center;}
-  #zoomCtl #zoomReset{font-size:.72rem;}
-  @media (max-width:900px){ #zoomCtl{display:flex;} }
-  @media print{ #zoomCtl{display:none !important;} }
-</style>
-<div id="zoomCtl">
-  <button id="zoomIn" aria-label="확대">＋</button>
-  <div class="zl" id="zoomLabel">100%</div>
-  <button id="zoomOut" aria-label="축소">－</button>
-  <button id="zoomReset" aria-label="원래 크기">1:1</button>
-</div>
 <script>
 (function(){
-  var KEY='pageZoomLevel', MIN=0.5, MAX=2.0, STEP=0.1;
-  var ctl=document.getElementById('zoomCtl'), label=document.getElementById('zoomLabel');
-  var z=1;
-  try{ var s=parseFloat(localStorage.getItem(KEY)); if(s>=MIN && s<=MAX) z=s; }catch(e){}
+  var KEY='pageZoomLevel', MIN=0.5, MAX=2.0, STEP=0.1, z=1;
+  var label=document.getElementById('zoomLabel');
+  try{ var v=parseFloat(localStorage.getItem(KEY)); if(v>=MIN && v<=MAX) z=v; }catch(e){}
   function apply(){
     z=Math.round(Math.min(MAX,Math.max(MIN,z))*100)/100;
-    document.documentElement.style.zoom = (z===1?'':z);
-    ctl.style.zoom = (z===1?'':(1/z));   // 컨트롤 자체는 크기 고정
+    document.body.style.zoom = (z===1?'':z);
     label.textContent=Math.round(z*100)+'%';
     try{ localStorage.setItem(KEY,String(z)); }catch(e){}
   }
