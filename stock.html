@@ -679,6 +679,14 @@ tr:hover td{background:#E6F1FB;}
             <button type="button" onclick="renameItem()" style="background:#185FA5;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;cursor:pointer;font-weight:500;white-space:nowrap;"><i class="ti ti-edit"></i> 변경</button>
           </div>
 
+          <!-- 품목 분류 지정 -->
+          <div style="font-size:11px;color:#555;font-weight:500;margin-bottom:6px;">품목 분류 지정</div>
+          <div style="display:flex;gap:6px;margin-bottom:12px;">
+            <select id="cat-item-sel" onchange="syncCatSel()" style="flex:1;font-size:13px;padding:8px 10px;border:1px solid #B5D4F4;border-radius:8px;outline:none;background:#fff;"></select>
+            <select id="cat-value-sel" style="flex:1;font-size:13px;padding:8px 10px;border:1px solid #B5D4F4;border-radius:8px;outline:none;background:#fff;"></select>
+            <button type="button" onclick="applyItemCategory()" style="background:#185FA5;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;cursor:pointer;font-weight:500;white-space:nowrap;"><i class="ti ti-check"></i> 적용</button>
+          </div>
+
           <!-- 구분선 -->
           <div style="border-top:1px solid #B5D4F4;margin-bottom:12px;"></div>
 
@@ -6838,7 +6846,14 @@ const BASE = [
   {name:"AI 모듈 (PT)",                initial:0, warnAt:0,   dangerAt:0,  alwaysOk:true, category:"정기점검 계통"},
 ];
 const CATEGORY_ORDER = ["수처리 계통","촉매 계통","에어필터 계통","정기점검 계통"];
+// 사용자가 직접 지정한 품목 분류 (이 브라우저에 저장)
+let catOverride = {};
+try { catOverride = JSON.parse(localStorage.getItem('pafc_cat_override') || '{}') || {}; } catch(e) { catOverride = {}; }
+function saveCatOverride(){
+  try { localStorage.setItem('pafc_cat_override', JSON.stringify(catOverride)); } catch(e) {}
+}
 function categoryOf(name){
+  if(catOverride[name] && [...CATEGORY_ORDER, "기타"].includes(catOverride[name])) return catOverride[name];
   const norm = n => n.replace(/O/g, '0');
   const b = BASE.find(b => norm(b.name) === norm(name));
   return b && b.category ? b.category : "기타";
@@ -7235,6 +7250,31 @@ async function deleteItem(){
   alert(`"${name}" 품목이 삭제되었습니다.`);
 }
 
+function syncCatSel(){
+  const it = document.getElementById('cat-item-sel');
+  const cv = document.getElementById('cat-value-sel');
+  if(it && cv && it.value) cv.value = categoryOf(it.value);
+}
+function refreshCatSelects(){
+  const it = document.getElementById('cat-item-sel');
+  const cv = document.getElementById('cat-value-sel');
+  if(!it || !cv) return;
+  const prev = it.value;
+  it.innerHTML = inv.map(i=>`<option value="${i.name}">${i.name}</option>`).join('');
+  if(prev && inv.find(i=>i.name===prev)) it.value = prev;
+  cv.innerHTML = [...CATEGORY_ORDER, "기타"].map(c=>`<option value="${c}">${c}</option>`).join('');
+  syncCatSel();
+}
+function applyItemCategory(){
+  const name = document.getElementById('cat-item-sel').value;
+  const cat = document.getElementById('cat-value-sel').value;
+  if(!name){ alert('품목을 선택하세요.'); return; }
+  catOverride[name] = cat;
+  saveCatOverride();
+  renderInv();
+  alert(`"${name}" 품목이 "${cat}"(으)로 분류되었습니다.`);
+}
+
 async function renameItem(){
   const sel = document.getElementById('rename-item-sel');
   const input = document.getElementById('rename-item-input');
@@ -7245,6 +7285,11 @@ async function renameItem(){
   if(newName === oldName){ alert('기존 품목명과 동일합니다.'); return; }
   if(inv.find(i=>i.name===newName)){ alert(`"${newName}" 품목이 이미 존재합니다.`); return; }
   if(!confirm(`"${oldName}" → "${newName}"(으)로 변경할까요?\n재고 수량과 입출고 이력은 그대로 유지됩니다.`)) return;
+
+  const oldCat = categoryOf(oldName);
+  catOverride[newName] = oldCat;
+  delete catOverride[oldName];
+  saveCatOverride();
 
   const item = inv.find(i=>i.name===oldName);
   if(item) item.name = newName;
@@ -7332,6 +7377,7 @@ function populateSels(){
     renameSel.innerHTML = inv.map(i=>`<option value="${i.name}">${i.name}</option>`).join('');
     if(prevVal && inv.find(i=>i.name===prevVal)) renameSel.value = prevVal;
   }
+  refreshCatSelects();
 }
 
 /* ===== 다중선택 공통 유틸 ===== */
