@@ -379,8 +379,9 @@ tr:hover td{background:#E6F1FB;}
 
   <div class="cloud-bar" id="cloud-bar" style="background: rgb(234, 243, 222); border-color: rgb(193, 224, 157);">
     <div class="cloud-status" id="cloud-status" style="color: rgb(59, 109, 17);"><i class="ti ti-cloud-lock"></i> <span>✓ 실시간 클라우드 연결 완료 (안전)</span></div>
-    <div style="display:flex;gap:8px;">
-      <button class="btn-sync" onclick="loadFromCloud()">수동 새로고침</button>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <span id="pending-badge" style="display:none;background:#FCEBEB;color:#A32D2D;border:1px solid #F7C1C1;border-radius:6px;padding:3px 8px;font-size:11px;white-space:nowrap;"></span>
+      <button class="btn-sync" onclick="manualSync()">수동 새로고침</button>
       <button class="btn-excel" onclick="exportToExcel()"><i class="ti ti-file-spreadsheet"></i> 엑셀로 저장</button>
     </div>
   </div>
@@ -6963,6 +6964,68 @@ function exportToExcel(){
   }
 }
 
+// 🌐 네트워크 요청 도우미: 응답이 늦으면 타임아웃 처리하고, 실패 시 자동으로 몇 번 더 시도합니다.
+// (와이파이<->LTE 전환, 순간적인 신호 끊김 등 일시적인 네트워크 문제로
+//  "동기화 실패"가 뜨는 것을 줄이기 위한 용도입니다.)
+async function fetchWithRetry(url, options={}, retries=2, timeoutMs=12000){
+  let lastErr;
+  for(let attempt=0; attempt<=retries; attempt++){
+    const controller = new AbortController();
+    const timer = setTimeout(()=>controller.abort(), timeoutMs);
+    try{
+      const res = await fetch(url, { ...options, signal: controller.signal });
+      clearTimeout(timer);
+      return res;
+    } catch(e){
+      clearTimeout(timer);
+      lastErr = e;
+      if(attempt < retries){
+        setStatus(`네트워크 재시도 중... (${attempt+1}/${retries})`);
+        await new Promise(r=>setTimeout(r, 900*(attempt+1)));
+      }
+    }
+  }
+  throw lastErr;
+}
+
+// 📥 저장 대기열: 클라우드 저장이 끝내 실패해도 이 브라우저에 변경 내용을 보관해 두었다가,
+// 인터넷이 다시 연결되면 자동으로 이어서 저장합니다. (데이터 유실 방지)
+function queuePendingOp(payload){
+  let q = [];
+  try { q = JSON.parse(localStorage.getItem('pafc_pending_ops') || '[]'); } catch(e) { q = []; }
+  q.push({ payload, ts: Date.now() });
+  try { localStorage.setItem('pafc_pending_ops', JSON.stringify(q)); } catch(e) {}
+  updatePendingBadge();
+}
+function updatePendingBadge(){
+  let q = [];
+  try { q = JSON.parse(localStorage.getItem('pafc_pending_ops') || '[]'); } catch(e) { q = []; }
+  const el = document.getElementById('pending-badge');
+  if(el) el.style.display = q.length ? 'inline-block' : 'none';
+  if(el) el.textContent = `⏳ 저장 대기 중 ${q.length}건`;
+}
+async function flushPendingOps(){
+  let q = [];
+  try { q = JSON.parse(localStorage.getItem('pafc_pending_ops') || '[]'); } catch(e) { q = []; }
+  if(!q.length) return;
+  setStatus(`이전에 저장하지 못한 변경사항 ${q.length}건을 동기화하는 중...`);
+  while(q.length){
+    const { payload } = q[0];
+    try{
+      const res = await fetchWithRetry(GOOGLE_WEB_APP_URL, {
+        method:"POST", body:JSON.stringify(payload), headers:{"Content-Type":"text/plain"}
+      }, 1, payload.action==='full' ? 25000 : 12000);
+      await res.json().catch(()=>null);
+      q.shift();
+      try { localStorage.setItem('pafc_pending_ops', JSON.stringify(q)); } catch(e) {}
+      updatePendingBadge();
+    } catch(e){
+      console.warn('아직 연결이 되지 않아 대기열 동기화를 다음 기회로 미룹니다.');
+      break;
+    }
+  }
+}
+
 async function loadFromCloud() {
   if(!GOOGLE_WEB_APP_URL || GOOGLE_WEB_APP_URL.includes("여기에_복사한")){
     setStatus("오류: 코드 내부에서 구글 앱스 스크립트 주소(URL) 설정이 필요합니다.", "error");
@@ -6970,7 +7033,7 @@ async function loadFromCloud() {
   }
   setStatus("클라우드 최신 데이터 동기화 중...");
   try {
-    const res = await fetch(`${GOOGLE_WEB_APP_URL}?action=read`);
+    const res = await fetchWithRetry(`${GOOGLE_WEB_APP_URL}?action=read`, { method: 'GET' });
     const data = await res.json();
     if(data.logs) logs = data.logs.map(l => ({
       ...l,
@@ -7035,14 +7098,16 @@ async function saveToCloud() {
   setStatus("클라우드 저장 중...");
   try {
     const payload = { action:"full", logs, sites, writers, items: inv.map(i=>i.name) };
-    const res = await fetch(GOOGLE_WEB_APP_URL, {
+    const res = await fetchWithRetry(GOOGLE_WEB_APP_URL, {
       method:"POST", body:JSON.stringify(payload), headers:{"Content-Type":"text/plain"}
     });
     const result = await res.json().catch(()=>({}));
     if(result.status==="success") setStatus("✓ 실시간 클라우드 연결 완료 (안전)", "success");
     else { console.error("GAS 오류:", result); setStatus("저장 실패: GAS 오류", "error"); }
   } catch(e) {
-    console.error(e); setStatus("저장 실패: 네트워크 오류", "error");
+    console.error(e);
+    queuePendingOp(payload);
+    setStatus("오프라인 상태: 변경사항을 임시 저장했어요. 연결되면 자동으로 동기화됩니다.", "error");
   }
 }
 
@@ -7052,7 +7117,7 @@ async function appendToCloud(log) {
   setStatus("클라우드 저장 중...");
   try {
     const payload = { action:"append", log };
-    const res = await fetch(GOOGLE_WEB_APP_URL, {
+    const res = await fetchWithRetry(GOOGLE_WEB_APP_URL, {
       method:"POST", body:JSON.stringify(payload), headers:{"Content-Type":"text/plain"}
     });
     const result = await res.json().catch(()=>null);
@@ -7071,7 +7136,9 @@ async function appendToCloud(log) {
       setStatus("저장 요청 완료 (응답 확인 불가 - 수동 새로고침으로 반영 확인 권장)", "success");
     }
   } catch(e) {
-    console.error(e); setStatus("저장 실패: 네트워크 오류", "error");
+    console.error(e);
+    queuePendingOp(payload);
+    setStatus("오프라인 상태: 이 입출고 내역을 임시 저장했어요. 연결되면 자동으로 동기화됩니다.", "error");
   }
 }
 
@@ -7081,7 +7148,7 @@ async function deleteFromCloud(logId) {
   setStatus("클라우드 저장 중...");
   try {
     const payload = { action:"delete", logId };
-    const res = await fetch(GOOGLE_WEB_APP_URL, {
+    const res = await fetchWithRetry(GOOGLE_WEB_APP_URL, {
       method:"POST", body:JSON.stringify(payload), headers:{"Content-Type":"text/plain"}
     });
     const result = await res.json().catch(()=>null);
@@ -7096,7 +7163,9 @@ async function deleteFromCloud(logId) {
       setStatus("삭제 요청 완료 (응답 확인 불가 - 수동 새로고침으로 반영 확인 권장)", "success");
     }
   } catch(e) {
-    console.error(e); setStatus("저장 실패: 네트워크 오류", "error");
+    console.error(e);
+    queuePendingOp(payload);
+    setStatus("오프라인 상태: 삭제 요청을 임시 저장했어요. 연결되면 자동으로 동기화됩니다.", "error");
   }
 }
 
@@ -7106,7 +7175,7 @@ async function updateLogInCloud(log) {
   setStatus("클라우드 저장 중...");
   try {
     const payload = { action:"update", log };
-    const res = await fetch(GOOGLE_WEB_APP_URL, {
+    const res = await fetchWithRetry(GOOGLE_WEB_APP_URL, {
       method:"POST", body:JSON.stringify(payload), headers:{"Content-Type":"text/plain"}
     });
     const result = await res.json().catch(()=>null);
@@ -7120,7 +7189,9 @@ async function updateLogInCloud(log) {
       setStatus("수정 저장 요청 완료 (응답 확인 불가 - 수동 새로고침으로 반영 확인 권장)", "success");
     }
   } catch(e) {
-    console.error(e); setStatus("저장 실패: 네트워크 오류", "error");
+    console.error(e);
+    queuePendingOp(payload);
+    setStatus("오프라인 상태: 수정 내용을 임시 저장했어요. 연결되면 자동으로 동기화됩니다.", "error");
   }
 }
 
@@ -8422,7 +8493,22 @@ document.getElementById('today-date').textContent = new Date().toLocaleDateStrin
 document.getElementById('io-date').value = new Date().toISOString().slice(0,10);
 
 // 페이지가 로드되면 자동으로 클라우드 데이터를 불러옵니다.
-loadFromCloud();
+async function manualSync(){
+  await flushPendingOps();
+  await loadFromCloud();
+}
+
+(async function bootSync(){
+  await flushPendingOps();   // 이전에 저장 못 한 변경사항을 먼저 보냅니다.
+  await loadFromCloud();     // 그 다음 서버의 최신 데이터를 받아옵니다.
+})();
+updatePendingBadge();
+
+// 인터넷이 끊겼다가 다시 연결되면: 밀린 저장부터 처리한 뒤 최신 데이터를 다시 받아옵니다.
+window.addEventListener('online', async () => {
+  await flushPendingOps();
+  await loadFromCloud();
+});
 </script>
 
 
